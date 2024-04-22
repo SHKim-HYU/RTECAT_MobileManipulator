@@ -12,6 +12,7 @@
     "forward_kinematics_path": "HYUMM/hyumm_fk.casadi",
     "forward_dynamics_path": "HYUMM/hyumm_fd.casadi",
     "center_of_mass_path": "HYUMM/hyumm_CoM_x.casadi",
+    "jacobian_center_of_mass_path": "HYUMM/hyumm_J_com.casadi",
     "inverse_dynamics_path": "HYUMM/hyumm_id.casadi",
     "Jacobian_forward_dynamics_path": "HYUMM/hyumm_J_fd.casadi",
     "Jacobian_inverse_dynamics_path": "HYUMM/hyumm_J_id.casadi",

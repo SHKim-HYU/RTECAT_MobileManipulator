@@ -12,6 +12,7 @@ gcc -fPIC -shared -O3 hyumm_J_fd.c -o hyumm_J_fd.so -lm
 gcc -fPIC -shared -O3 hyumm_J_id.c -o hyumm_J_id.so -lm
 gcc -fPIC -shared -O3 hyumm_J_s.c -o hyumm_J_s.so -lm
 gcc -fPIC -shared -O3 hyumm_CoM_x.c -o hyumm_CoM_x.so -lm
+gcc -fPIC -shared -O3 hyumm_J_com.c -o hyumm_J_com.so -lm
 
 mv ./*.so ../
 
