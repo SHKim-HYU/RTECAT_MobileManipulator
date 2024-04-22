@@ -28,13 +28,13 @@
 #define TORQUE_ADC_100 96 // Torque ADC for Core 100 [NRMK]
 
 // Indy7
-// SN: DB45I17E0B007 [Indy7]
-#define ZERO_POS_1 -389838
-#define ZERO_POS_2 57701
-#define ZERO_POS_3 -199021
-#define ZERO_POS_4 9040
-#define ZERO_POS_5 656537
-#define ZERO_POS_6 -650739
+// SN: DD11I7ED001 [Indy7]
+#define ZERO_POS_1 20902
+#define ZERO_POS_2 28201
+#define ZERO_POS_3 292649
+#define ZERO_POS_4 61158
+#define ZERO_POS_5 2180
+#define ZERO_POS_6 31587
 
 #define F_c 20.123, 12.287, 4.5622, 3.1492, 3.4757, 3.4986
 #define F_v1 111.32, 70.081, 25.337, 13.131, 8.5082, 9.9523
@@ -84,6 +84,10 @@
 #define GEAR_RATIO_50 50
 #define GEAR_RATIO_18 18
 
+#define WHEEL_RADIUS 0.0775 // [m]
+#define BASE_l 0.41 // [m]
+#define BASE_w 0.31 // [m]
+
 #define EFFICIENCY 75.0 // Gear efficiency
 
 // 4. Type Definition
@@ -100,11 +104,10 @@ typedef Eigen::Matrix<double, 3, 3> Matrix3d;
 
 typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM, 1> Mob_JVec;
 typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM, MOBILE_DRIVE_NUM> Mob_JMat;
-typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM> Mob_ScrewList;
-typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM> Mob_Jacobian;
-typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM,6 > Mob_pinvJacobian;
-typedef Eigen::Matrix<double, 6*MOBILE_DRIVE_NUM, MOBILE_DRIVE_NUM> Mob_DerivativeJacobianVec;
-typedef Eigen::Matrix<double, 6*MOBILE_DRIVE_NUM, 1> Mob_vecJVec;
+typedef Eigen::Matrix<double, 3, MOBILE_DRIVE_NUM> Mob_Jacobian;
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM,3 > Mob_pinvJacobian;
+typedef Eigen::Matrix<double, 3*MOBILE_DRIVE_NUM, MOBILE_DRIVE_NUM> Mob_DerivativeJacobianVec;
+typedef Eigen::Matrix<double, 3*MOBILE_DRIVE_NUM, 1> Mob_vecJVec;
 typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM, MOBILE_DRIVE_NUM> Mob_Matrixnd;  
 typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM> Mob_Matrix6xn;
 typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+1> Mob_Matrix6xn_1;
@@ -121,3 +124,15 @@ typedef Eigen::Matrix<double, NRMK_DRIVE_NUM, NRMK_DRIVE_NUM> Arm_Matrixnd;
 typedef Eigen::Matrix<double, 6, NRMK_DRIVE_NUM> Arm_Matrix6xn;
 typedef Eigen::Matrix<double, 6, NRMK_DRIVE_NUM+1> Arm_Matrix6xn_1;
 typedef Eigen::Matrix<double, NRMK_DRIVE_NUM, NRMK_DRIVE_NUM> Arm_MassMat;
+
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, 1> MM_JVec;
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_JMat;
+typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_ScrewList;
+typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_Jacobian;
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM,6 > MM_pinvJacobian;
+typedef Eigen::Matrix<double, 6*(MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM), MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_DerivativeJacobianVec;
+typedef Eigen::Matrix<double, 6*(MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM), 1> MM_vecJVec;
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_Matrixnd;  
+typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_Matrix6xn;
+typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM+1> MM_Matrix6xn_1;
+typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_MassMat;

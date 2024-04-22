@@ -97,7 +97,7 @@ private:
     /** frequency to check for master or slave state change.
      *  state checked every frequency_ control loops */
     unsigned int check_state_frequency_ = 100;
-
+	int num_slaves = 0;
 
 };
 

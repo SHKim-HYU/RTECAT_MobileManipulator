@@ -2,10 +2,13 @@
 
 MOB_ROBOT_INFO info_mob;
 ARM_ROBOT_INFO info_arm;
+MM_ROBOT_INFO info_mm;
 
 CS_Indy7 cs_indy7;
 CS_Indy7 cs_nom_indy7;
 CS_Indy7 cs_sim_indy7;
+
+CS_hyumm cs_hyumm;
 
 RT_TASK safety_task;
 RT_TASK motor_task;
@@ -13,6 +16,7 @@ RT_TASK print_task;
 RT_TASK xddp_writer;
 
 using namespace std;
+
 
 bool isSlaveInit()
 {
@@ -46,8 +50,8 @@ int initAxes()
 		Axis_Motor[i].setTauK(((double)ecat_master.SDO_TORQUE_CONSTANT(i+offset_junction))/1000000.0);
 		Axis_Motor[i].setZeroPos(zeroPos_mob[i]);
 
-		Axis_Motor[i].setDirQ(ecat_master.SDO_MOTOR_DIRECTION(i+offset_junction));
-		Axis_Motor[i].setDirTau(ecat_master.SDO_MOTOR_DIRECTION(i+offset_junction));
+		Axis_Motor[i].setDirQ(dirQ_mob[i]);
+		Axis_Motor[i].setDirTau(dirTau_mob[i]);
 
 		Axis_Motor[i].setConversionConstants();
 
@@ -81,13 +85,27 @@ int initAxes()
 		Axis_Core[i].setTarTorInCnt(0);
 	}
 
+	// Mecanum Mobile Base Jacobian
+	Jinv_mob << 1, -1, -BASE_l-BASE_w,
+				1, 1, BASE_l+BASE_w, 
+				1, -1, BASE_l+BASE_w, 
+				1, -1, -BASE_l-BASE_w;
+	Jinv_mob = Jinv_mob/WHEEL_RADIUS;
+
+	J_mob << 	1, 1, 1, 1,
+				-1, 1, -1, 1,
+				1.0/(-BASE_l-BASE_w), 1.0/(BASE_l+BASE_w), 1.0/(BASE_l+BASE_w), 1.0/(-BASE_l-BASE_w);
+	J_mob = J_mob*WHEEL_RADIUS/4.0;
+
+
 	return 1;
 }
 
 void readData()
 {
     // ecat_master.Motor_STATE(info_mob.q_inc, info_mob.dq_inc, info_mob.tau_per, info_mob.statusword, info_mob.modeofop);
-    ecat_master.RxUpdate();
+    
+	ecat_master.TxUpdate();
     for(int i=0; i<MOBILE_DRIVE_NUM;i++)
     {
 
@@ -109,22 +127,51 @@ void readData()
         }
 
     }
-    for(int i=0;i<NRMK_DRIVE_NUM;i++)
-    {
-        if(!Axis_Core[i].trajInitialized())
-        {
-            Axis_Core[i].setTrajInitialQuintic();
-            Axis_Core[i].setTarPosInRad(info_arm.q_target(i));
-            Axis_Core[i].setTarVelInRad(0);
-            Axis_Core[i].setTrajTargetQuintic(traj_time);
-        }
+    for(int i=0; i<NRMK_DRIVE_NUM;i++)
+	{
 
-        Axis_Core[i].TrajQuintic();
+		Axis_Core[i].setCurrentPosInCnt(ecat_drive[i].position_);
+		Axis_Core[i].setCurrentVelInCnt(ecat_drive[i].velocity_);
+		Axis_Core[i].setCurrentTorInCnt(ecat_drive[i].torque_);
+		
+		Axis_Core[i].setCurrentTime(gt);
 
-        info_arm.des.q(i)=Axis_Core[i].getDesPosInRad();
-        info_arm.des.q_dot(i)=Axis_Core[i].getDesVelInRad();
-        info_arm.des.q_ddot(i)=Axis_Core[i].getDesAccInRad();
-    }
+		info_arm.act.q(i) = Axis_Core[i].getCurrPosInRad();
+		info_arm.act.q_dot(i) = Axis_Core[i].getCurrVelInRad();
+		info_arm.act.tau(i) = Axis_Core[i].getCurrTorInNm();
+
+		if(!system_ready)
+		{
+			Axis_Core[i].setTarPosInRad(info_arm.act.q(i));
+			Axis_Core[i].setDesPosInRad(info_arm.act.q(i));
+			info_arm.nom.q = info_arm.act.q;
+			info_arm.nom.q_dot = info_arm.act.q_dot;
+			info_arm.nom.tau = info_arm.act.tau;
+		}
+
+	}
+	for(int i=0; i<NRMK_TOOL_NUM; i++)
+	{
+		// Update RFT data
+		if (ecat_tool[i].FT_Raw_Fx_==0 && ecat_tool[i].FT_Raw_Fy_==0 && ecat_tool[i].FT_Raw_Fz_==0)
+		{
+			info_arm.act.F(0) = 0.0;
+			info_arm.act.F(1) = 0.0;
+			info_arm.act.F(2) = 0.0;
+			info_arm.act.F(3) = 0.0;
+			info_arm.act.F(4) = 0.0;
+			info_arm.act.F(5) = 0.0;
+		}
+		else{
+			info_arm.act.F(0) = (double)ecat_tool[i].FT_Raw_Fx_ / force_divider - ft_offset[0];
+			info_arm.act.F(1) = (double)ecat_tool[i].FT_Raw_Fy_ / force_divider - ft_offset[1];
+			info_arm.act.F(2) = (double)ecat_tool[i].FT_Raw_Fz_ / force_divider - ft_offset[2];
+			info_arm.act.F(3) = (double)ecat_tool[i].FT_Raw_Tx_ / torque_divider - ft_offset[3];
+			info_arm.act.F(4) = (double)ecat_tool[i].FT_Raw_Ty_ / torque_divider - ft_offset[4];
+			info_arm.act.F(5) = (double)ecat_tool[i].FT_Raw_Tz_ / torque_divider - ft_offset[5];
+
+		}
+	}
 }
 
 /****************************************************************************/
@@ -135,32 +182,33 @@ void trajectory_generation(){
 	    switch(motion)
 	    {
 	    case 1:
-	    	info_mob.q_target(0)=1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=1.5709; info_mob.q_target(3)=-1.5709;
+	    	info_mob.q_target(0)=1.5709; info_mob.q_target(1)=1.5709; info_mob.q_target(2)=1.5709; info_mob.q_target(3)=1.5709; // FW
             info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.707; 	info_arm.q_target(2)=-1.5709;
 	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=-0.707; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 3;
+	    	traj_time = 2;
 	    	motion++;
 	        break;
 	    case 2:
-	    	info_mob.q_target(0)=0.0; info_mob.q_target(1)=0.0; info_mob.q_target(2)=0.0; info_mob.q_target(3)=0.0;
+			info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; // BW
             info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.0; 	info_arm.q_target(2)=0.0;
 	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 3;
+	    	traj_time = 2;
 	    	motion++;
 	    	// motion=1;
 	        break;
 	    case 3:
-	    	info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=1.5709;
+	    	info_mob.q_target(0)=1.5709; info_mob.q_target(1)=-4.7127; info_mob.q_target(2)=1.5709; info_mob.q_target(3)=-4.7127; //
+			
             info_arm.q_target(0)=-1.5709; 	info_arm.q_target(1)=0.4071; 	info_arm.q_target(2)=-0.4071;
 	    	info_arm.q_target(3)=-1.5709; 	info_arm.q_target(4)=-1.5709; 	info_arm.q_target(5)=-1.5709;
-	    	traj_time = 3;
+	    	traj_time = 2;
 	    	motion++;
 	        break;
 	    case 4:
-	    	info_mob.q_target(0)=0.0; info_mob.q_target(1)=0.0; info_mob.q_target(2)=0.0; info_mob.q_target(3)=0.0;
+			info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; //
             info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.0; 	info_arm.q_target(2)=0.0;
 	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 3;
+	    	traj_time = 2;
 	    	motion=1;
 	    	break;
 	    default:
@@ -215,14 +263,10 @@ void compute()
 	// Update nominal
 	cs_nom_indy7.updateRobot(info_arm.nom.q , info_arm.nom.q_dot);
 
+	info_mob.act.x_dot = J_mob * info_mob.act.q_dot;
+
 	SE3 T_ee = cs_indy7.computeFK(info_arm.act.q);
 	info_arm.act.x << T_ee(0,3), T_ee(1,3), T_ee(2,3), 0, 0, 0;
-
-	// rt_printf("T_ee:\n");
-	// rt_printf("%lf, %lf, %lf, %lf\n", T_ee(0,0), T_ee(0,1), T_ee(0,2), T_ee(0,3));
-	// rt_printf("%lf, %lf, %lf, %lf\n", T_ee(1,0), T_ee(1,1), T_ee(1,2), T_ee(1,3));
-	// rt_printf("%lf, %lf, %lf, %lf\n", T_ee(2,0), T_ee(2,1), T_ee(2,2), T_ee(2,3));
-	// rt_printf("%lf, %lf, %lf, %lf\n", T_ee(3,0), T_ee(3,1), T_ee(3,2), T_ee(3,3));
 
 	Arm_Jacobian J_b = cs_indy7.getJ_b();
 	info_arm.act.x_dot = J_b*info_arm.act.q_dot;
@@ -249,7 +293,7 @@ void compute()
 			}
 			else
 			{
-				// F_tmp[i]=info.act.F(i);
+				// F_tmp[i]=info_arm.act.F(i);
 				F_tmp[i]=0.0;
 			}
 		}
@@ -295,11 +339,13 @@ void control()
         }
     }
 
+	// info_arm.nom.tau = cs_nom_indy7.ComputedTorqueControl(info_arm.nom.q, info_arm.nom.q_dot, info_arm.des.q, info_arm.des.q_dot, info_arm.des.q_ddot);
     info_arm.nom.tau = cs_nom_indy7.ComputedTorqueControl(info_arm.nom.q, info_arm.nom.q_dot, info_arm.des.q, info_arm.des.q_dot, info_arm.des.q_ddot, info_arm.act.tau_ext);
     info_arm.act.tau_aux = cs_indy7.NRIC(info_arm.act.q, info_arm.act.q_dot, info_arm.nom.q, info_arm.nom.q_dot);
     info_arm.des.tau = info_arm.nom.tau - info_arm.act.tau_aux;
 
     cs_nom_indy7.computeRK45(info_arm.nom.q, info_arm.nom.q_dot, info_arm.nom.tau, info_arm.nom.q, info_arm.nom.q_dot);
+	// info_arm.des.tau = cs_indy7.computeG(info_arm.act.q);
 }
 
 void writeData()
@@ -328,7 +374,7 @@ void writeData()
             // rt_printf("velocity: %d\n",Axis_Motor[i-1].getDesVelInRPM());
             ecat_iservo[i-1].writeVelocity(Axis_Motor[i-1].getDesVelInRPM(info_mob.des.tau(i-1)));
         }
-        ecat_master.TxUpdate();
+		ecat_master.RxUpdate();
 	}
 
     for(int i=1;i<=NRMK_DRIVE_NUM;i++){
@@ -340,7 +386,7 @@ void writeData()
         // ecat_master.RxPDO1_SEND(i, (short)temp);
         ecat_drive[i-1].writeTorque(temp);
 
-        ecat_master.TxUpdate();
+        ecat_master.RxUpdate();
 	}
     ecat_master.SyncEcatMaster(rt_timer_read());
 }
@@ -351,6 +397,28 @@ void motor_run(void *arg)
    
     memset(&info_mob, 0, sizeof(MOB_ROBOT_INFO));
     memset(&info_arm, 0, sizeof(ARM_ROBOT_INFO));
+
+	int ft_init_cnt = 0;
+
+	info_arm.des.q = Arm_JVec::Zero();
+	info_arm.des.q_dot = Arm_JVec::Zero();
+	info_arm.des.q_ddot = Arm_JVec::Zero();
+	info_arm.des.F = Vector6d::Zero();
+	info_arm.des.F_CB = Vector6d::Zero();
+	info_arm.act.tau_aux = Arm_JVec::Zero();
+
+	// Real
+	NRIC_Kp << 20.0, 25.0, 10.0, 3.0, 3.0, 1.5;
+	NRIC_Ki << 5.0, 5.5, 2.5, 0.8, 0.8, 0.6;
+	NRIC_K_gamma << 550.0, 600.0, 450.0, 250.0, 250.0, 175.0;
+	cs_indy7.setNRICgain(NRIC_Kp, NRIC_Ki, NRIC_K_gamma);
+	
+	// nominal
+	Kp_n << 50.0, 50.0, 30.0, 15.0, 15.0, 15.0;
+	Kd_n << 5.0, 5.0, 3.0, 1.5, 1.5, 1.5;
+	Ki_n = Arm_JVec::Zero();
+
+	cs_nom_indy7.setPIDgain(Kp_n, Kd_n, Ki_n);
 
     // ecat_master.activate_all(DEVICE2, config, MOBILE_DRIVE_NUM);
 
@@ -398,13 +466,17 @@ void motor_run(void *arg)
             trajectory_generation();
             
             // Compute KDL
-            // compute();	
+            compute();	
 
             
             // Controller
             control();
                     
         }
+		else
+		{
+			info_arm.des.tau = cs_indy7.computeG(info_arm.act.q);
+		}
         // Write Joint Data
         writeData();
         
@@ -412,7 +484,42 @@ void motor_run(void *arg)
 		periodCycle = (unsigned long) endCycle - beginCycle;
 
         if(isSlaveInit())
-            system_ready=true;
+		{
+			if(ft_init_cnt==0)
+			{
+				// Stop FT Sensor
+				UINT32 FTConfigParam=FT_STOP_DEVICE;
+				ecat_tool[0].writeFTconfig(FTConfigParam);			
+        		ecat_master.RxUpdate();
+				ft_init_cnt++;
+			}
+			else if(ft_init_cnt==1)
+			{
+				// Start
+				UINT32 FTConfigParam=FT_START_DEVICE;
+				ecat_tool[0].writeFTconfig(FTConfigParam);			
+        		ecat_master.RxUpdate();
+				ft_init_cnt++;
+			}
+			else if(ft_init_cnt==2)
+			{
+				// Set Filter 100Hz
+				UINT32 FTConfigParam=FT_SET_FILTER_10;
+				ecat_tool[0].writeFTconfig(FTConfigParam);			
+        		ecat_master.RxUpdate();
+				ft_init_cnt++;
+			}
+			else if(ft_init_cnt==3)
+			{
+				// Set bias
+				UINT32 FTConfigParam=FT_SET_BIAS;
+				ecat_tool[0].writeFTconfig(FTConfigParam);			
+        		ecat_master.RxUpdate();
+				ft_init_cnt++;
+			}
+			else
+				system_ready=true;;	//all drives have been done
+		} 
             
         gt+= period;
         if (periodCycle > cycle_ns) overruns++;
@@ -502,6 +609,7 @@ void print_run(void *arg)
 			rt_printf("Time=%0.3lfs, cycle_dt=%lius,  overrun=%d\n", gt, periodCycle/1000, overruns);
 			
             rt_printf("Mobile Data\n");
+			rt_printf("Vx: %lf, Vy: %lf, Wz: %lf\n", info_mob.act.x_dot(0), info_mob.act.x_dot(1), info_mob.act.x_dot(2));
 			for(int j=0; j<MOBILE_DRIVE_NUM; ++j){
 				rt_printf("ID: %d", j);
 				rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_mob.act.q(j), info_mob.act.q_dot(j));
@@ -510,12 +618,13 @@ void print_run(void *arg)
 			}
             rt_printf("Arm Data\n");
 			for(int j=0; j<NRMK_DRIVE_NUM; ++j){
-				rt_printf("ID: %d", j);
-				rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_arm.act.q(j), info_arm.act.q_dot(j));
+				rt_printf("ID: %d", j+MOBILE_DRIVE_NUM);
 				rt_printf("\t DesPos: %lf, DesVel :%lf, DesAcc :%lf\n",info_arm.des.q[j],info_arm.des.q_dot[j],info_arm.des.q_ddot[j]);
-				rt_printf("\t TarTor: %lf, ActTor: %lf, ExtTor: %lf \n", info_arm.des.tau(j), info_arm.act.tau(j), info_arm.act.tau_ext(j));
+				rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_arm.act.q(j), info_arm.act.q_dot(j));
+				rt_printf("\t NomPos: %lf, NomVel: %lf \n",info_arm.nom.q(j), info_arm.nom.q_dot(j));
+				rt_printf("\t TarTor: %lf, ActTor: %lf, NomTor: %lf, ExtTor: %lf \n", info_arm.des.tau(j), info_arm.act.tau(j), info_arm.nom.tau(j), info_arm.act.tau_ext(j));
 			}
-
+			rt_printf("ReadFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_arm.act.F(0),info_arm.act.F(1),info_arm.act.F(2),info_arm.act.F(3),info_arm.act.F(4),info_arm.act.F(5));
 			rt_printf("\n");
 
 		}
@@ -538,8 +647,8 @@ void signal_handler(int signum)
     rt_task_delete(&print_task);
     rt_task_delete(&xddp_writer);
     
-    // for(int i=0; i<MOBILE_DRIVE_NUM; i++)
-    //     ecat_iservo[i].setServoOff();
+    for(int i=0; i<MOBILE_DRIVE_NUM; i++)
+        ecat_iservo[i].setServoOff();
         
     ecat_master.deactivate();
 
@@ -583,6 +692,9 @@ int main(int argc, char *argv[])
 	cs_nom_indy7.CSSetup("../lib/URDF2CASADI/indy7/indy7.json", period);
 	cs_sim_indy7=CS_Indy7();
 	cs_sim_indy7.CSSetup("../lib/URDF2CASADI/indy7/indy7.json", period);
+
+	cs_hyumm=CS_hyumm();
+	cs_hyumm.CSSetup("../lib/URDF2CASADI/hyumm/hyumm.json", period);
 
     // // For CST (cyclic synchronous torque) control
 	// if (ecat_master.init(OP_MODE_CYCLIC_SYNC_TORQUE, cycle_ns) == -1)

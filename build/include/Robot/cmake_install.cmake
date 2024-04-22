@@ -1,8 +1,8 @@
-# Install script for directory: /home/robot/robot_ws/RTECAT_Indy7/include/Robot
+# Install script for directory: /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_Indy7")
+  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_MobileManipulator")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

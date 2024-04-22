@@ -79,7 +79,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -619,7 +619,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator"
 		},
 		{
 			"name" : "CMAKE_INSTALL_BINDIR",
@@ -1483,7 +1483,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow"
 		},
 		{
 			"name" : "DarkStyleWindow_LIB_DEPENDS",
@@ -1507,7 +1507,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow"
 		},
 		{
 			"name" : "EcatSystem_BINARY_DIR",
@@ -1519,7 +1519,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/EcatSystem"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/EcatSystem"
 		},
 		{
 			"name" : "EcatSystem_LIB_DEPENDS",
@@ -1543,7 +1543,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/EcatSystem"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/EcatSystem"
 		},
 		{
 			"name" : "Eigen3_DIR",
@@ -1659,7 +1659,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/Interpolator"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Interpolator"
 		},
 		{
 			"name" : "Interpolator_SOURCE_DIR",
@@ -1671,7 +1671,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/Interpolator"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator"
 		},
 		{
 			"name" : "KERNELHEADERS_DIR",
@@ -2035,7 +2035,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/QtWidgets"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/QtWidgets"
 		},
 		{
 			"name" : "QtWidgets_LIB_DEPENDS",
@@ -2059,7 +2059,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/QtWidgets"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/QtWidgets"
 		},
 		{
 			"name" : "RTECAT_MobileManipulator_BINARY_DIR",
@@ -2071,7 +2071,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build"
 		},
 		{
 			"name" : "RTECAT_MobileManipulator_SHARED_LIBS",
@@ -2095,7 +2095,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator"
 		},
 		{
 			"name" : "RTECAT_MobileManipulator_VERBOSE",
@@ -2119,7 +2119,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/Robot"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot"
 		},
 		{
 			"name" : "Robot_LIB_DEPENDS",
@@ -2143,7 +2143,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/Robot"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot"
 		},
 		{
 			"name" : "XENOMAI_ROOT_DIR",
@@ -3119,7 +3119,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/darkstyle"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/darkstyle"
 		},
 		{
 			"name" : "darkstyle_SOURCE_DIR",
@@ -3131,7 +3131,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/darkstyle"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow/darkstyle"
 		},
 		{
 			"name" : "framelesswindow_BINARY_DIR",
@@ -3143,7 +3143,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/framelesswindow"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/framelesswindow"
 		},
 		{
 			"name" : "framelesswindow_LIB_DEPENDS",
@@ -3167,7 +3167,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/framelesswindow"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow/framelesswindow"
 		},
 		{
 			"name" : "images_BINARY_DIR",
@@ -3179,7 +3179,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/images"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/images"
 		},
 		{
 			"name" : "images_SOURCE_DIR",
@@ -3191,7 +3191,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/images"
+			"value" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow/images"
 		},
 		{
 			"name" : "jsoncpp_DIR",

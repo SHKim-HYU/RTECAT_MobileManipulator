@@ -895,8 +895,15 @@ Arm_JVec CS_Indy7::ComputedTorqueControl( Arm_JVec q,Arm_JVec dq,Arm_JVec q_des,
 {
     Arm_JVec e = q_des-q;
     Arm_JVec edot = dq_des-dq;
-    double m_gam = 1;
-    
+    // double m_gam = 0.75;
+    Arm_JMat m_gam;
+    m_gam << 0.75, 0, 0, 0, 0, 0,
+            0, 0.75, 0, 0, 0, 0,
+            0, 0, 0.75, 0, 0, 0,
+            0, 0, 0, 0.75, 0, 0,
+            0, 0, 0, 0, 0.75, 0,
+            0, 0, 0, 0, 0, 0.75;
+
     eint = eint + e*period;	
     
     if(isUpdated)

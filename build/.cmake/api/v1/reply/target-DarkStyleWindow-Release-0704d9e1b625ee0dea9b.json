@@ -108,18 +108,18 @@
 			"includes" : 
 			[
 				{
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow"
 				},
 				{
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow"
 				},
 				{
 					"backtrace" : 0,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/DarkStyleWindow_autogen/include"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/DarkStyleWindow_autogen/include"
 				},
 				{
 					"backtrace" : 4,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/bin/inc"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/bin/inc"
 				},
 				{
 					"backtrace" : 5,
@@ -127,23 +127,23 @@
 				},
 				{
 					"backtrace" : 5,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/EcatSystem"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/EcatSystem"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/Interpolator"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/Robot"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/QtWidgets"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/QtWidgets"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/framelesswindow"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow/framelesswindow"
 				},
 				{
 					"backtrace" : 2,

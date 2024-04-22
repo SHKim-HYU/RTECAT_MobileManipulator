@@ -1,8 +1,8 @@
-# Install script for directory: /home/robot/robot_ws/RTECAT_Indy7
+# Install script for directory: /home/robot/robot_ws/RTECAT_MobileManipulator
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_Indy7")
+  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_MobileManipulator")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -39,11 +39,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/EcatSystem/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/Interpolator/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/Robot/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/QtWidgets/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/EcatSystem/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Interpolator/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/QtWidgets/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/cmake_install.cmake")
 
 endif()
 
@@ -55,5 +55,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/robot/robot_ws/RTECAT_Indy7/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/robot/robot_ws/RTECAT_MobileManipulator/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -136,18 +136,18 @@
 			"includes" : 
 			[
 				{
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/build"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build"
 				},
 				{
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator"
 				},
 				{
 					"backtrace" : 0,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/build/RTECAT_MobileManipulator_CTRL_autogen/include"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/RTECAT_MobileManipulator_CTRL_autogen/include"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/bin/inc"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/bin/inc"
 				},
 				{
 					"backtrace" : 6,
@@ -155,23 +155,23 @@
 				},
 				{
 					"backtrace" : 6,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/EcatSystem"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/EcatSystem"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/Interpolator"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/Robot"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/QtWidgets"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/QtWidgets"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow"
 				},
 				{
 					"backtrace" : 7,
@@ -199,7 +199,7 @@
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/framelesswindow"
+					"path" : "/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow/framelesswindow"
 				},
 				{
 					"backtrace" : 2,
@@ -311,7 +311,7 @@
 				"role" : "flags"
 			},
 			{
-				"fragment" : "-Wl,-rpath,/home/robot/robot_ws/RTECAT_Indy7/build/include/Robot:/opt/casadi/lib:/opt/Qt5.14.2/5.14.2/gcc_64/lib",
+				"fragment" : "-Wl,-rpath,/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot:/opt/casadi/lib:/opt/Qt5.14.2/5.14.2/gcc_64/lib",
 				"role" : "libraries"
 			},
 			{

@@ -18,35 +18,19 @@ QProxyStyle
 QStyleFactory
 -
 
-/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/moc_DarkStyle.cpp
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/moc_DarkStyle.cpp
 memory
 -
 DarkStyle.h
-/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/DarkStyle.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/DarkStyle.h
 QtCore/qbytearray.h
 -
 QtCore/qmetatype.h
 -
 
-/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/DarkStyleWindow_autogen/mocs_compilation.cpp
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/DarkStyleWindow_autogen/mocs_compilation.cpp
 EWIEGA46WW/moc_DarkStyle.cpp
-/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/moc_DarkStyle.cpp
-
-/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/DarkStyle.cpp
-DarkStyle.h
-/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/DarkStyle.h
-
-/home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow/DarkStyle.h
-QApplication
--
-QFile
--
-QFont
--
-QProxyStyle
--
-QStyleFactory
--
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/DarkStyleWindow_autogen/EWIEGA46WW/moc_DarkStyle.cpp
 
 /opt/Qt5.14.2/5.14.2/gcc_64/include/QtCore/QFile
 qfile.h

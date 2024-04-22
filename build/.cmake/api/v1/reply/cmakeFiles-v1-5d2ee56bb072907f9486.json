@@ -691,8 +691,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/robot/robot_ws/RTECAT_Indy7/build",
-		"source" : "/home/robot/robot_ws/RTECAT_Indy7"
+		"build" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build",
+		"source" : "/home/robot/robot_ws/RTECAT_MobileManipulator"
 	},
 	"version" : 
 	{

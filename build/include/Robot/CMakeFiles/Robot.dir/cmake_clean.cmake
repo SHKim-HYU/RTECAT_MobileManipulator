@@ -3,6 +3,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/Robot_autogen.dir/ParseCache.txt"
   "Robot_autogen"
   "CMakeFiles/Robot.dir/CS_Indy7.cpp.o"
+  "CMakeFiles/Robot.dir/CS_hyumm.cpp.o"
   "CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.o"
   "libRobot.pdb"
   "libRobot.so"

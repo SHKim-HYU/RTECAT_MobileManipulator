@@ -142,7 +142,7 @@ namespace NRMKHelper
 		void setConversionConstants()
 		{
 			_radToCnt = (double)(_dirQ * _gearRatio * _pulsePerRevolution) / (PI2);
-			_RadToRPM = (double)(60.0 * _gearRatio / PI2);
+			_RadToRPM = (double)(_dirQ * 60.0 * _gearRatio / PI2);
 			_NmToPer = (double)(_dirTau)/(double)(_tauK*_tauRateCur*_gearRatio*_gearEfficiency)*1000.0*100.0;
 
 			_cntToRad = 1.0 /_radToCnt;

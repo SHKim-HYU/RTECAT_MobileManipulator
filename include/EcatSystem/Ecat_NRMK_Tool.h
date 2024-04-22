@@ -28,6 +28,10 @@ public:
      *  User must first set max_torque_Nm_.
      *  Provided as a convenience to calculate target_torque_
      *  NOTE: function assumes [max_torque_ = 1000]  */
+    void writeFTconfig(uint32_t config)
+    {
+ 	   FT_configparam_ = config;
+    }
 
 	virtual void processData(size_t index, uint8_t* domain_address) //read and write PDO and if index is 8,
 	{                                                               //check the state and change the flag of state

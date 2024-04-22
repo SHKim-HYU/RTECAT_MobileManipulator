@@ -1,8 +1,8 @@
-# Install script for directory: /home/robot/robot_ws/RTECAT_Indy7/include/DarkStyleWindow
+# Install script for directory: /home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_Indy7")
+  set(CMAKE_INSTALL_PREFIX "/home/robot/robot_ws/RTECAT_MobileManipulator")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -39,9 +39,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/darkstyle/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/framelesswindow/cmake_install.cmake")
-  include("/home/robot/robot_ws/RTECAT_Indy7/build/include/DarkStyleWindow/images/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/darkstyle/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/framelesswindow/cmake_install.cmake")
+  include("/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/DarkStyleWindow/images/cmake_install.cmake")
 
 endif()
 
