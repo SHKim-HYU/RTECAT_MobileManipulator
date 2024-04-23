@@ -283,6 +283,11 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     if (FD_handle == 0) {
         throw std::runtime_error("Cannot open hyumm_fd.so");
     }
+    func_path = casadi_path + "_CoM_x.so";
+    CoM_x_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (CoM_x_handle == 0) {
+        throw std::runtime_error("Cannot open hyumm_CoM_x.so");
+    }
     func_path = casadi_path + "_M.so";
     M_handle = dlopen(func_path.c_str(), RTLD_LAZY);
     if (M_handle == 0) {
@@ -318,11 +323,20 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     if (J_s_handle == 0) {
         throw std::runtime_error("Cannot open hyumm_J_s.so");
     }
+    func_path = casadi_path + "_J_com.so";
+    J_com_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (J_com_handle == 0) {
+        throw std::runtime_error("Cannot open hyumm_J_com.so");
+    }
 
     // Reset error
     dlerror();
     // Function evaluation
     FD_eval = (eval_t)dlsym(FD_handle, "aba");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
+    CoM_x_eval = (eval_t)dlsym(CoM_x_handle, "centerOfMass");
     if (dlerror()) {
         throw std::runtime_error("Function evaluation failed.");
     }
@@ -352,6 +366,10 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
         throw std::runtime_error("Function evaluation failed.");
     }
     J_s_eval = (eval_t)dlsym(J_s_handle, "J_s");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
+    J_com_eval = (eval_t)dlsym(J_com_handle, "jacobianCenterOfMass");
     if (dlerror()) {
         throw std::runtime_error("Function evaluation failed.");
     }
@@ -681,6 +699,54 @@ MM_JVec CS_hyumm::computeG(MM_JVec _q)
     }
 
     return G;
+}
+
+MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> J_com_res = Minv_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = 3;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[sz_arg];
+    double* res[sz_res*n_dof];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_values[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_values[i] = _q(i);
+        arg[i] = &input_values[i];
+    }
+
+    // Set output buffers
+    double output_values[sz_res*n_dof]; // 3xn_dof matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (J_com_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        for (casadi_int j = 0; j < sz_res; ++j) {   
+            J_com(j,i) = output_values[i * sz_res + j];
+            cout<<J_com(j,i)<<"  ";
+        }
+        cout<<endl;
+    }
+
+    return J_com;
 }
 
 SE3 CS_hyumm::computeFK(MM_JVec _q)

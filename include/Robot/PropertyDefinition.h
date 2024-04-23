@@ -129,6 +129,7 @@ typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, 1> MM_JVec;
 typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_JMat;
 typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_ScrewList;
 typedef Eigen::Matrix<double, 6, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_Jacobian;
+typedef Eigen::Matrix<double, 3, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_Jacobian_CoM;
 typedef Eigen::Matrix<double, MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM,6 > MM_pinvJacobian;
 typedef Eigen::Matrix<double, 6*(MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM), MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM> MM_DerivativeJacobianVec;
 typedef Eigen::Matrix<double, 6*(MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM), 1> MM_vecJVec;

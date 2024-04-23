@@ -48,8 +48,11 @@ public:
 	MM_MassMat computeC(MM_JVec _q, MM_JVec _dq);
 	MM_JVec computeG(MM_JVec _q);
 
+	Vector3d computeCoM(MM_JVec _q);
+
 	SE3 computeFK(MM_JVec _q);
 
+	MM_Jacobian_CoM computeJ_com(MM_JVec _q);	
 	MM_Jacobian computeJ_b(MM_JVec _q);
 	MM_Jacobian computeJ_s(MM_JVec _q);
 
@@ -79,9 +82,11 @@ private:
 	MM_JVec e, eint;
 	MM_MassMat M, Minv, C;
 	MM_JVec G;
+	Vector3d CoM;
 
 	SE3 T_ee;
 	MM_Jacobian J_b, J_s;
+	MM_Jacobian_com J_com;
 
 private:
 	bool isUpdated = false;
@@ -90,21 +95,25 @@ private:
 	double period;
 
 	void* FD_handle;
+	void* CoM_x_handle;
 	void* M_handle;
 	void* Minv_handle;
 	void* C_handle;
 	void* G_handle;
 	void* J_s_handle;
 	void* J_b_handle;
+	void* J_com_handle;
 	void* FK_handle;
 	
 	eval_t FD_eval;
+	eval_t CoM_x_eval;
 	eval_t M_eval;
 	eval_t Minv_eval;
 	eval_t C_eval;
 	eval_t G_eval;
 	eval_t J_s_eval;
 	eval_t J_b_eval;
+	eval_t J_com_eval;
 	eval_t FK_eval;
 
 	// casadi::Function fd_cs, M_cs, Minv_cs, C_cs, G_cs, J_s_cs, J_b_cs, FK_cs;
