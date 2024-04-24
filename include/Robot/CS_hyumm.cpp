@@ -418,6 +418,8 @@ void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
 
     T_ee = computeFK(_q);
 
+    CoM = computeCoM(_q);
+    J_com = computeJ_com(_q);
 
     isUpdated=true;   
 }
@@ -701,11 +703,11 @@ MM_JVec CS_hyumm::computeG(MM_JVec _q)
     return G;
 }
 
-MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
+Vector3d CS_hyumm::computeCoM(MM_JVec _q)
 {
     // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
     // vector<casadi::DM> arg = {q_dm};
-    // vector<casadi::DM> J_com_res = Minv_cs(arg);
+    // vector<casadi::DM> G_res = G_cs(arg);
 
     // Allocate input/output buffers and work vectors
     casadi_int sz_arg = n_dof;
@@ -714,7 +716,7 @@ MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
     casadi_int sz_w = 0;
 
     const double* arg[sz_arg];
-    double* res[sz_res*n_dof];
+    double* res[sz_res];
     casadi_int iw[sz_iw];
     double w[sz_w];
 
@@ -726,7 +728,7 @@ MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
     }
 
     // Set output buffers
-    double output_values[sz_res*n_dof]; // 3xn_dof matrix
+    double output_values[sz_res]; // 6x6 matrix
     for (casadi_int i = 0; i < sz_res; ++i) {
         res[i] = &output_values[i];
     }
@@ -734,19 +736,15 @@ MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
     // Evaluate the function
     int mem = 0;  // No thread-local memory management
     
-    if (J_com_eval(arg, res, iw, w, mem)) {
+    if (CoM_x_eval(arg, res, iw, w, mem)) {
         throw std::runtime_error("Function evaluation failed.\n");
     }
 
     for (casadi_int i = 0; i < sz_res; ++i) {
-        for (casadi_int j = 0; j < sz_res; ++j) {   
-            J_com(j,i) = output_values[i * sz_res + j];
-            cout<<J_com(j,i)<<"  ";
-        }
-        cout<<endl;
+        CoM(i) = output_values[i];
     }
 
-    return J_com;
+    return CoM;
 }
 
 SE3 CS_hyumm::computeFK(MM_JVec _q)
@@ -793,6 +791,52 @@ SE3 CS_hyumm::computeFK(MM_JVec _q)
     }
 
     return T_ee;
+}
+
+MM_Jacobian_CoM CS_hyumm::computeJ_com(MM_JVec _q)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> J_com_res = Minv_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = 3;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[sz_arg];
+    double* res[sz_res*n_dof];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_values[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_values[i] = _q(i);
+        arg[i] = &input_values[i];
+    }
+
+    // Set output buffers
+    double output_values[sz_res*n_dof]; // 3xn_dof matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (J_com_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < n_dof; ++i) {
+        for (casadi_int j = 0; j < sz_res; ++j) {   
+            J_com(j,i) = output_values[i * sz_res + j];
+        }
+    }
+
+    return J_com;
 }
 
 MM_Jacobian CS_hyumm::computeJ_b(MM_JVec _q)
@@ -903,9 +947,17 @@ MM_JVec CS_hyumm::getG()
 {
     return G;
 }
+Vector3d CS_hyumm::getCoM()
+{
+    return CoM;
+}
 SE3 CS_hyumm::getFK()
 {
     return T_ee;
+}
+MM_Jacobian_CoM CS_hyumm::getJ_com()
+{
+    return J_com;
 }
 MM_Jacobian CS_hyumm::getJ_b()
 {

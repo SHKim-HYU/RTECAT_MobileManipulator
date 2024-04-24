@@ -45,7 +45,7 @@
 #define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
 
 #define NSEC_PER_SEC 			1000000000
-unsigned int cycle_ns = 1000000; // 2 ms
+unsigned int cycle_ns = 1000000; // 1 ms
 double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second unit
 
 #define FT_START_DEVICE 	0x0000000B
@@ -74,6 +74,8 @@ static int run = 1;
 unsigned long periodCycle = 0, worstCycle = 0;
 unsigned int overruns = 0;
 
+double act_max[4] = {0.0,};
+
 // Interface to physical axes
 // Mobile
 NRMKHelper::ServoAxis_Motor Axis_Motor[MOBILE_DRIVE_NUM];
@@ -89,6 +91,8 @@ const int 	 TauADC_arm[NRMK_DRIVE_NUM] = {TORQUE_ADC_500,TORQUE_ADC_500,TORQUE_A
 const double TauK_arm[NRMK_DRIVE_NUM] = {TORQUE_CONST_500,TORQUE_CONST_500,TORQUE_CONST_200,TORQUE_CONST_100,TORQUE_CONST_100,TORQUE_CONST_100};
 const int 	 dirQ_arm[NRMK_DRIVE_NUM] = {-1,-1,1,-1,-1,-1};
 const int 	 dirTau_arm[NRMK_DRIVE_NUM] = {-1,-1,1,-1,-1,-1};
+NRMKHelper::ServoAxis_Motor Axis_MM[MM_DOF_NUM];
+
 // Robotous FT EtherCAT
 union DeviceConfig
 {
@@ -126,6 +130,7 @@ typedef struct MOB_STATE{
 	Mob_JVec tau_ext;
 	Mob_JVec e;
 	Mob_JVec eint;
+	Mob_JVec edot;
 	Mob_JVec G;
 
 	Vector3d x;                           //Task space
@@ -176,9 +181,10 @@ typedef struct ARM_STATE{
 	Arm_JVec tau_aux;
 	Arm_JVec e;
 	Arm_JVec eint;
+	Arm_JVec edot;
 	Arm_JVec G;
 
-	Vector6d x;                           //Task space
+	SE3 	 T;                           //Task space
 	Vector6d x_dot;
 	Vector6d x_ddot;
 	Vector6d F;
@@ -216,42 +222,33 @@ typedef struct ARM_ROBOT_INFO{
     ARM_MOTOR_INFO motor;
 }ARM_ROBOT_INFO;
 
-// MM
+// Mobile Manipulator
 typedef struct MM_STATE{
-	MM_JVec q;
-	MM_JVec q_dot;
+	MM_JVec q;			// x, y, th, q1, q2, q3, q4, q5, q6
+	MM_JVec q_dot;		// vx, vy, wz, dq1, dq2, dq3, dq4, dq5, dq6
 	MM_JVec q_ddot;
-	MM_JVec tau;
+	MM_JVec tau;		// Fx, Fy, Tz, tau1, tau2, tau3, tau4, tau5, tau6
 	MM_JVec tau_fric;
 	MM_JVec tau_ext;
 	MM_JVec tau_aux;
 	MM_JVec e;
 	MM_JVec eint;
-	MM_JVec G;
+	MM_JVec edot;
 
-	Vector6d x;                           //Task space
+	SE3 	 T;                           //Task space
 	Vector6d x_dot;
 	Vector6d x_ddot;
 	Vector6d F;
 	Vector6d F_CB;
     Vector6d F_ext;
+
+	Vector3d CoM_x;
+	MM_Jacobian_CoM J_com;
     
     double s_time;
 }mm_state;
 
-typedef struct MM_MOTOR_INFO{
-    double torque_const[NRMK_DRIVE_NUM];
-    double gear_ratio[NRMK_DRIVE_NUM];
-    double rate_current[NRMK_DRIVE_NUM];
-}mm_Motor_Info;
-
 typedef struct MM_ROBOT_INFO{
-	int Position;
-	int q_inc[NRMK_DRIVE_NUM];
-    int dq_inc[NRMK_DRIVE_NUM];
-	int tau_per[NRMK_DRIVE_NUM];
-	int statusword[NRMK_DRIVE_NUM];
-    int modeofop[NRMK_DRIVE_NUM];
 
 	MM_JVec q_target;
 	MM_JVec qdot_target;
@@ -264,7 +261,6 @@ typedef struct MM_ROBOT_INFO{
 	MM_STATE nom;
 	MM_STATE sim;
 
-    MM_MOTOR_INFO motor;
 }MM_ROBOT_INFO;
 
 // Controller Gains

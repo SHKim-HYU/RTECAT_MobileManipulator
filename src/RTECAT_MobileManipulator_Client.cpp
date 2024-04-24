@@ -85,16 +85,25 @@ int initAxes()
 		Axis_Core[i].setTarTorInCnt(0);
 	}
 
+	// Mobile Manipulator Init Axes
+	for (int i = 0; i < MM_DOF_NUM; i++)
+	{	
+		Axis_MM[i].setTrajPeriod(period);
+		
+		Axis_MM[i].setTarVelInCnt(0);
+		Axis_MM[i].setTarTorInCnt(0);
+	}
+
 	// Mecanum Mobile Base Jacobian
-	Jinv_mob << 1, -1, -BASE_l-BASE_w,
-				1, 1, BASE_l+BASE_w, 
-				1, -1, BASE_l+BASE_w, 
-				1, -1, -BASE_l-BASE_w;
+	Jinv_mob << 1.0, 1.0, -BASE_l-BASE_w,
+				1.0, -1.0, -BASE_l-BASE_w,
+				1.0, 1.0, BASE_l+BASE_w, 
+				1.0, -1.0, BASE_l+BASE_w;
 	Jinv_mob = Jinv_mob/WHEEL_RADIUS;
 
-	J_mob << 	1, 1, 1, 1,
-				-1, 1, -1, 1,
-				1.0/(-BASE_l-BASE_w), 1.0/(BASE_l+BASE_w), 1.0/(BASE_l+BASE_w), 1.0/(-BASE_l-BASE_w);
+	J_mob << 	1.0, 1.0, 1.0, 1.0,
+				1.0, -1.0, 1.0, -1.0,
+				 1.0/(-BASE_l-BASE_w), 1.0/(-BASE_l-BASE_w), 1.0/(BASE_l+BASE_w), 1.0/(BASE_l+BASE_w);
 	J_mob = J_mob*WHEEL_RADIUS/4.0;
 
 
@@ -116,7 +125,14 @@ void readData()
         Axis_Motor[i].setCurrentTime(gt);
 
         info_mob.act.q(i) = Axis_Motor[i].getCurrPosInRad();
-        info_mob.act.q_dot(i) = Axis_Motor[i].getCurrVelInRad();
+		if (fabs(Axis_Motor[i].getCurrVelInRad())<10.0)
+		{
+			info_mob.act.q_dot(i) = Axis_Motor[i].getCurrVelInRad();
+		}
+		else
+		{
+			act_max[i] = fabs(Axis_Motor[i].getCurrVelInRad());
+		}
         info_mob.act.tau(i) = Axis_Motor[i].getCurrTorInNm();
 
         // For Inital target
@@ -140,6 +156,10 @@ void readData()
 		info_arm.act.q_dot(i) = Axis_Core[i].getCurrVelInRad();
 		info_arm.act.tau(i) = Axis_Core[i].getCurrTorInNm();
 
+		Axis_MM[MOBILE_DOF_NUM+i].setCurrentPosInConf(info_arm.act.q(i));
+		Axis_MM[MOBILE_DOF_NUM+i].setCurrentVelInConf(info_arm.act.q_dot(i));
+		Axis_MM[MOBILE_DOF_NUM+i].setCurrentTime(gt);
+		
 		if(!system_ready)
 		{
 			Axis_Core[i].setTarPosInRad(info_arm.act.q(i));
@@ -150,6 +170,24 @@ void readData()
 		}
 
 	}
+
+	// Mapping status to Mobile Manipulator
+	info_mob.act.x_dot = J_mob * info_mob.act.q_dot;
+	info_mob.act.x += info_mob.act.x_dot*period;
+
+	info_mm.act.q_dot.segment<MOBILE_DOF_NUM>(0) = info_mob.act.x_dot;
+	info_mm.act.q.segment<MOBILE_DOF_NUM>(0) = info_mob.act.x;
+	info_mm.act.q_dot.segment<NRMK_DRIVE_NUM>(MOBILE_DOF_NUM) = info_arm.act.q_dot;
+	info_mm.act.q.segment<NRMK_DRIVE_NUM>(MOBILE_DOF_NUM) = info_arm.act.q;
+
+	for(int i=0; i<MOBILE_DOF_NUM; i++)
+	{
+		Axis_MM[i].setCurrentPosInConf(info_mm.act.q(i));
+		Axis_MM[i].setCurrentVelInConf(info_mm.act.q_dot(i));
+
+		Axis_MM[i].setCurrentTime(gt);
+	}
+
 	for(int i=0; i<NRMK_TOOL_NUM; i++)
 	{
 		// Update RFT data
@@ -177,83 +215,81 @@ void readData()
 /****************************************************************************/
 void trajectory_generation(){
 	/////////////Trajectory for Joint Space//////////////
-    if(!Axis_Motor[0].trajInitialized())
+    if(!Axis_MM[0].trajInitialized())
     {
 	    switch(motion)
 	    {
 	    case 1:
-	    	info_mob.q_target(0)=1.5709; info_mob.q_target(1)=1.5709; info_mob.q_target(2)=1.5709; info_mob.q_target(3)=1.5709; // FW
-            info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.707; 	info_arm.q_target(2)=-1.5709;
-	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=-0.707; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 2;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.707; info_mm.q_target(5)=-1.5709;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-0.707; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;
 	    	motion++;
 	        break;
 	    case 2:
-			info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; // BW
-            info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.0; 	info_arm.q_target(2)=0.0;
-	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 2;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;
 	    	motion++;
-	    	// motion=1;
 	        break;
 	    case 3:
-	    	info_mob.q_target(0)=1.5709; info_mob.q_target(1)=-4.7127; info_mob.q_target(2)=1.5709; info_mob.q_target(3)=-4.7127; //
-			
-            info_arm.q_target(0)=-1.5709; 	info_arm.q_target(1)=0.4071; 	info_arm.q_target(2)=-0.4071;
-	    	info_arm.q_target(3)=-1.5709; 	info_arm.q_target(4)=-1.5709; 	info_arm.q_target(5)=-1.5709;
-	    	traj_time = 2;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
+			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
+	    	traj_time = 10;
 	    	motion++;
 	        break;
 	    case 4:
-			info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; //
-            info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=0.0; 	info_arm.q_target(2)=0.0;
-	    	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
-	    	traj_time = 2;
-	    	motion=1;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;
+			motion=1;
 	    	break;
-	    default:
-	    	info_mob.q_target(0)=info_mob.act.q(0); info_mob.q_target(1)=info_mob.act.q(1); info_mob.q_target(2)=info_mob.act.q(2); info_mob.q_target(3)=info_mob.act.q(3);
-            info_arm.q_target(0)=info_arm.act.q(0); 	info_arm.q_target(1)=info_arm.act.q(1); 	info_arm.q_target(2)=info_arm.act.q(2);
-	    	info_arm.q_target(3)=info_arm.act.q(3); 	info_arm.q_target(4)=info_arm.act.q(4); 	info_arm.q_target(5)=info_arm.act.q(5);
+		// case 5:
+		// 	// info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; //
+        //     info_arm.q_target(0)=0.0; 	info_arm.q_target(1)=-1.5709; 	info_arm.q_target(2)=0.0;
+	    // 	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
+	    // 	traj_time = 4;
+	    // 	motion++;
+	    // 	break;
+	    // case 6:
+		// 	// info_mob.q_target(0)=-1.5709; info_mob.q_target(1)=-1.5709; info_mob.q_target(2)=-1.5709; info_mob.q_target(3)=-1.5709; //
+        //     info_arm.q_target(0)=-1.5709; 	info_arm.q_target(1)=-1.5709; 	info_arm.q_target(2)=0.0;
+	    // 	info_arm.q_target(3)=0.0; 	info_arm.q_target(4)=0.0; 	info_arm.q_target(5)=0.0;
+	    // 	traj_time = 4;
+	    // 	motion=1;
+	    // 	break;
+		default:
+			info_mm.q_target(0)=info_mm.act.q(0); info_mm.q_target(1)=info_mm.act.q(1); info_mm.q_target(2)=info_mm.act.q(2);
+			info_mm.q_target(3)=info_mm.act.q(3); info_mm.q_target(4)=info_mm.act.q(4); info_mm.q_target(5)=info_mm.act.q(5);
+			info_mm.q_target(6)=info_mm.act.q(6); info_mm.q_target(7)=info_mm.act.q(7); info_mm.q_target(8)=info_mm.act.q(8);
 
 	    	motion=1;
 	    	break;
 	    }
 	}
 
-	for(int i=0;i<MOBILE_DRIVE_NUM;i++)
+	for(int i=0;i<MM_DOF_NUM;i++)
 	{
-		if(!Axis_Motor[i].trajInitialized())
+		if(!Axis_MM[i].trajInitialized())
 		{
-			Axis_Motor[i].setTrajInitialQuintic();
-			Axis_Motor[i].setTarPosInRad(info_mob.q_target(i));
-			Axis_Motor[i].setTarVelInRad(0);
-			Axis_Motor[i].setTrajTargetQuintic(traj_time);
+			Axis_MM[i].setTrajInitialQuintic();
+			Axis_MM[i].setTarPosInRad(info_mm.q_target(i));
+			Axis_MM[i].setTarVelInRad(0);
+			Axis_MM[i].setTrajTargetQuintic(traj_time);
 		}
 
-		Axis_Motor[i].TrajQuintic();
+		Axis_MM[i].TrajQuintic();
 
-		info_mob.des.q(i)=Axis_Motor[i].getDesPosInRad();
-		info_mob.des.q_dot(i)=Axis_Motor[i].getDesVelInRad();
-		info_mob.des.q_ddot(i)=Axis_Motor[i].getDesAccInRad();
+		info_mm.des.q(i)=Axis_MM[i].getDesPosInRad();
+		info_mm.des.q_dot(i)=Axis_MM[i].getDesVelInRad();
+		info_mm.des.q_ddot(i)=Axis_MM[i].getDesAccInRad();
 	}
-
-    for(int i=0;i<NRMK_DRIVE_NUM;i++)
-	{
-		if(!Axis_Core[i].trajInitialized())
-		{
-			Axis_Core[i].setTrajInitialQuintic();
-			Axis_Core[i].setTarPosInRad(info_arm.q_target(i));
-			Axis_Core[i].setTarVelInRad(0);
-			Axis_Core[i].setTrajTargetQuintic(traj_time);
-		}
-
-		Axis_Core[i].TrajQuintic();
-
-		info_arm.des.q(i)=Axis_Core[i].getDesPosInRad();
-		info_arm.des.q_dot(i)=Axis_Core[i].getDesVelInRad();
-		info_arm.des.q_ddot(i)=Axis_Core[i].getDesAccInRad();
-	}
+	info_arm.des.q = info_mm.des.q.segment<NRMK_DRIVE_NUM>(MOBILE_DOF_NUM);
+	info_arm.des.q_dot = info_mm.des.q_dot.segment<NRMK_DRIVE_NUM>(MOBILE_DOF_NUM);
+	info_arm.des.q_ddot = info_mm.des.q_ddot.segment<NRMK_DRIVE_NUM>(MOBILE_DOF_NUM);
 }
 
 void compute()
@@ -262,11 +298,14 @@ void compute()
 	cs_indy7.updateRobot(info_arm.act.q , info_arm.act.q_dot);
 	// Update nominal
 	cs_nom_indy7.updateRobot(info_arm.nom.q , info_arm.nom.q_dot);
-
-	info_mob.act.x_dot = J_mob * info_mob.act.q_dot;
-
-	SE3 T_ee = cs_indy7.computeFK(info_arm.act.q);
-	info_arm.act.x << T_ee(0,3), T_ee(1,3), T_ee(2,3), 0, 0, 0;
+	// Update Mobile Manipulator
+	cs_hyumm.updateRobot(info_mm.act.q, info_mm.act.q_dot);
+	
+	info_mm.act.CoM_x = cs_hyumm.getCoM();
+	info_mm.act.J_com = cs_hyumm.getJ_com();
+	
+	info_arm.act.T = cs_indy7.getFK();
+	info_mm.act.T = cs_hyumm.getFK();
 
 	Arm_Jacobian J_b = cs_indy7.getJ_b();
 	info_arm.act.x_dot = J_b*info_arm.act.q_dot;
@@ -334,10 +373,13 @@ void control()
         }
         else if (ecat_iservo[i].mode_of_operation_ == ecat_iservo[i].MODE_CYCLIC_SYNC_VELOCITY)
         {
-            info_mob.des.e(i) = info_mob.des.q(i)-info_mob.act.q(i);
-            info_mob.des.tau(i) = info_mob.des.q_dot(i) + 0.1*(info_mob.des.q_dot(i)-info_mob.act.q_dot(i)) + 1*info_mob.des.e(i);
+            info_mm.des.e(i) = info_mm.des.q(i)-info_mm.act.q(i);
+			info_mm.des.edot(i) = info_mm.des.q_dot(i)-info_mm.act.q_dot(i);
+            info_mm.des.tau(i) = info_mm.des.q_dot(i) + 0.1*info_mm.des.edot(i) + 1*info_mm.des.e(i);
         }
     }
+	info_mob.des.tau = Jinv_mob * info_mm.des.tau.segment<MOBILE_DOF_NUM>(0);
+	info_mob.des.q_dot = info_mob.des.tau;
 
 	// info_arm.nom.tau = cs_nom_indy7.ComputedTorqueControl(info_arm.nom.q, info_arm.nom.q_dot, info_arm.des.q, info_arm.des.q_dot, info_arm.des.q_ddot);
     info_arm.nom.tau = cs_nom_indy7.ComputedTorqueControl(info_arm.nom.q, info_arm.nom.q_dot, info_arm.des.q, info_arm.des.q_dot, info_arm.des.q_ddot, info_arm.act.tau_ext);
@@ -609,11 +651,16 @@ void print_run(void *arg)
 			rt_printf("Time=%0.3lfs, cycle_dt=%lius,  overrun=%d\n", gt, periodCycle/1000, overruns);
 			
             rt_printf("Mobile Data\n");
-			rt_printf("Vx: %lf, Vy: %lf, Wz: %lf\n", info_mob.act.x_dot(0), info_mob.act.x_dot(1), info_mob.act.x_dot(2));
+			rt_printf("Des_x: %lf, Des_y: %lf, Des_th: %lf\n", info_mm.des.q(0), info_mm.des.q(1), info_mm.des.q(2));
+			rt_printf("Act_x: %lf, Act_y: %lf, Act_th: %lf\n", info_mm.act.q(0), info_mm.act.q(1), info_mm.act.q(2));
+			rt_printf("Des_Vx: %lf, Des_Vy: %lf, Des_Wz: %lf\n", info_mm.des.q_dot(0), info_mm.des.q_dot(1), info_mm.des.q_dot(2));
+			rt_printf("Act_Vx: %lf, Act_Vy: %lf, Act_Wz: %lf\n", info_mm.act.q_dot(0), info_mm.act.q_dot(1), info_mm.act.q_dot(2));
+			rt_printf("Max act: %lf, %lf, %lf, %lf\n", act_max[0], act_max[1], act_max[2], act_max[3]);
+			
 			for(int j=0; j<MOBILE_DRIVE_NUM; ++j){
 				rt_printf("ID: %d", j);
-				rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_mob.act.q(j), info_mob.act.q_dot(j));
 				rt_printf("\t DesPos: %lf, DesVel :%lf, DesAcc :%lf\n",info_mob.des.q[j],info_mob.des.q_dot[j],info_mob.des.q_ddot[j]);
+				rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_mob.act.q(j), info_mob.act.q_dot(j));
 				rt_printf("\t TarTor: %lf, ActTor: %lf, ExtTor: %lf \n", info_mob.des.tau(j), info_mob.act.tau(j), info_mob.act.tau_ext(j));
 			}
             rt_printf("Arm Data\n");
@@ -625,6 +672,11 @@ void print_run(void *arg)
 				rt_printf("\t TarTor: %lf, ActTor: %lf, NomTor: %lf, ExtTor: %lf \n", info_arm.des.tau(j), info_arm.act.tau(j), info_arm.nom.tau(j), info_arm.act.tau_ext(j));
 			}
 			rt_printf("ReadFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_arm.act.F(0),info_arm.act.F(1),info_arm.act.F(2),info_arm.act.F(3),info_arm.act.F(4),info_arm.act.F(5));
+			rt_printf("CoM_x:\t%lf, %lf, %lf\n", info_mm.act.CoM_x(0), info_mm.act.CoM_x(1), info_mm.act.CoM_x(2));
+			rt_printf("J_com:\t%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n",info_mm.act.J_com(0,0),info_mm.act.J_com(0,1),info_mm.act.J_com(0,2),info_mm.act.J_com(0,3),info_mm.act.J_com(0,4),info_mm.act.J_com(0,5),info_mm.act.J_com(0,6),info_mm.act.J_com(0,7),info_mm.act.J_com(0,8));
+			rt_printf("\t%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n",info_mm.act.J_com(1,0),info_mm.act.J_com(1,1),info_mm.act.J_com(1,2),info_mm.act.J_com(1,3),info_mm.act.J_com(1,4),info_mm.act.J_com(1,5),info_mm.act.J_com(1,6),info_mm.act.J_com(1,7),info_mm.act.J_com(1,8));
+			rt_printf("\t%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n\n",info_mm.act.J_com(2,0),info_mm.act.J_com(2,1),info_mm.act.J_com(2,2),info_mm.act.J_com(2,3),info_mm.act.J_com(2,4),info_mm.act.J_com(2,5),info_mm.act.J_com(2,6),info_mm.act.J_com(2,7),info_mm.act.J_com(2,8));
+
 			rt_printf("\n");
 
 		}

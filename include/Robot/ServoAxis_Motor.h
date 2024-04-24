@@ -184,9 +184,17 @@ namespace NRMKHelper
 		{
 			_q = (double) (ActPosInCnt - _zeroPos) * _cntToRad;
 		}
+		void setCurrentPosInConf(double ActPosInConf)
+		{
+			_q = ActPosInConf;
+		}
 		void setCurrentVelInCnt(INT32 ActVelInCnt)
 		{
 			_qdot = (double) ActVelInCnt * _cntToRad;
+		}
+		void setCurrentVelInConf(double ActVelInConf)
+		{
+			_qdot = ActVelInConf;
 		}
 		void setCurrentVelInRPM(INT32 ActVelInRPM)
 		{

@@ -6,11 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.cpp
-CS_Indy7.h
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.cpp
+CS_hyumm.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.h
 
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.h
 iostream
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/iostream
 json_loader.h

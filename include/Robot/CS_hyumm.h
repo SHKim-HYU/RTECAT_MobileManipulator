@@ -60,9 +60,11 @@ public:
 	MM_MassMat getMinv();
 	MM_MassMat getC();
 	MM_JVec getG();
+	Vector3d getCoM();
 
 	SE3 getFK();
 
+	MM_Jacobian_CoM getJ_com();
 	MM_Jacobian getJ_b();
 	MM_Jacobian getJ_s();
 
@@ -86,7 +88,7 @@ private:
 
 	SE3 T_ee;
 	MM_Jacobian J_b, J_s;
-	MM_Jacobian_com J_com;
+	MM_Jacobian_CoM J_com;
 
 private:
 	bool isUpdated = false;
