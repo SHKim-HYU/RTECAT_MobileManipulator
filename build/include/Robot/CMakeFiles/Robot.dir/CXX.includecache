@@ -19,6 +19,14 @@ Eigen/Dense
 -
 dlfcn.h
 -
+LieOperator.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
+PropertyDefinition.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
+Eigen/Dense
+-
 PropertyDefinition.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
 

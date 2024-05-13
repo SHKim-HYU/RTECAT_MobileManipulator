@@ -15,6 +15,8 @@ CS_hyumm::CS_hyumm()
     this->G.resize(this->n_dof);
     this->J_b.resize(6, this->n_dof);
     this->J_s.resize(6, this->n_dof);
+    this->dJ_b.resize(6, this->n_dof);
+    this->dJ_s.resize(6, this->n_dof);
 
     this->Kp.resize(this->n_dof, this->n_dof);
     this->Kv.resize(this->n_dof, this->n_dof);
@@ -40,6 +42,10 @@ CS_hyumm::CS_hyumm()
 
     e = MM_JVec::Zero();
     eint = MM_JVec::Zero();
+
+    r_floor << X_com, Y_com, Z_com;
+    r_ceil = SkewMatrix(r_floor); 
+    G_tool << 0, 0, -mass_tool*9.8, 0, 0, 0;
 
     for (int i=0; i<this->n_dof; ++i)
     {
@@ -150,6 +156,8 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     this->G.resize(this->n_dof);
     this->J_b.resize(6, this->n_dof);
     this->J_s.resize(6, this->n_dof);
+    this->dJ_b.resize(6, this->n_dof);
+    this->dJ_s.resize(6, this->n_dof);
 
     this->Kp.resize(this->n_dof, this->n_dof);
     this->Kv.resize(this->n_dof, this->n_dof);
@@ -159,6 +167,15 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     this->Hinf_Kv.resize( this->n_dof, this->n_dof);
     this->Hinf_Ki.resize( this->n_dof, this->n_dof);
     this->Hinf_K_gamma.resize( this->n_dof, this->n_dof);
+
+    r_floor << X_com, Y_com, Z_com;
+    r_ceil = SkewMatrix(r_floor); 
+    G_tool << 0, 0, -mass_tool*9.8, 0, 0, 0;
+	G_FT << 0, 0, -mass_FT*9.8, 0, 0, 0;
+
+    A_tool=Matrix6d::Zero(); B_tool=Matrix6d::Zero();
+    A_tool(0,0) = mass_tool; A_tool(1,1) = mass_tool; A_tool(2,2) = mass_tool;
+    A_tool(3,3) = Ixx; A_tool(4,4) = Iyy; A_tool(5,5) = Izz; 
 
     for (int i=0; i<this->n_dof; ++i)
     {
@@ -323,6 +340,16 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     if (J_s_handle == 0) {
         throw std::runtime_error("Cannot open hyumm_J_s.so");
     }
+    func_path = casadi_path + "_dJ_b.so";
+    dJ_b_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (J_b_handle == 0) {
+        throw std::runtime_error("Cannot open hyumm_dJ_b.so");
+    }
+    func_path = casadi_path + "_dJ_s.so";
+    dJ_s_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (J_s_handle == 0) {
+        throw std::runtime_error("Cannot open hyumm_dJ_s.so");
+    }
     func_path = casadi_path + "_J_com.so";
     J_com_handle = dlopen(func_path.c_str(), RTLD_LAZY);
     if (J_com_handle == 0) {
@@ -366,6 +393,14 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
         throw std::runtime_error("Function evaluation failed.");
     }
     J_s_eval = (eval_t)dlsym(J_s_handle, "J_s");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
+    dJ_b_eval = (eval_t)dlsym(dJ_b_handle, "dJ_b");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
+    dJ_s_eval = (eval_t)dlsym(dJ_s_handle, "dJ_s");
     if (dlerror()) {
         throw std::runtime_error("Function evaluation failed.");
     }
@@ -415,6 +450,7 @@ void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
     G = computeG(_q); 
 
     J_b = computeJ_b(_q);
+    dJ_b = computeJdot_b(_q, _dq);
 
     T_ee = computeFK(_q);
 
@@ -482,7 +518,7 @@ MM_JVec CS_hyumm::computeFD(MM_JVec _q, MM_JVec _dq, MM_JVec _tau)
 
 }
 
-void CS_hyumm::computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom)
+void CS_hyumm::computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom, MM_JVec &_ddq_nom)
 {
     MM_JVec k1, k2, k3, k4;
 
@@ -511,8 +547,69 @@ void CS_hyumm::computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_no
     k4 = computeFD(_q3, _q_dot3, _tau);
     _q_nom = _q + (period / 6.0) * (_dq + 2 * (_q_dot1 + _q_dot2) + _q_dot3);
     _dq_nom = _dq + (period / 6.0) * (k1 + 2 * (k2 + k3) + k4);
+    _ddq_nom = k1;
 }
 
+se3 CS_hyumm::computeF_Tool(se3 _dx, se3 _ddx)
+{
+    se3 res;
+    Matrix6d adj = adjointMatrix(_dx);
+    Matrix6d AdT = Matrix6d::Zero(); 
+
+	AdT.block<3,3>(0,0) = R_ee.transpose();
+    F_FT = AdT * G_FT;
+    AdT.block<3,3>(3,3) = R_ee.transpose();
+    AdT.block<3,3>(3,0) = -R_ee.transpose()*r_ceil;
+    
+    B_tool = A_tool*adj - adj.transpose()*A_tool;
+
+    res = A_tool*_ddx + B_tool*_dx + F_FT + AdT*G_tool;
+    return res;
+}
+
+se3 CS_hyumm::computeF_Threshold(se3 _F)
+{
+    se3 res;
+
+    for(int i=0; i<6; i++)
+    {
+		if(i<3)
+		{
+			if(0.8>abs(_F(i)))
+			{
+				res(i)=0.0;
+			}
+			else
+			{
+				res(i)=_F(i);
+			}
+		}
+		else if(i==5)
+		{
+			if(0.05>abs(_F(i)))
+			{
+				res(i)=0.0;
+			}
+			else
+			{
+				// F_tmp[i]=_F(i);
+				res(i)=0.0;
+			}
+		}
+		else 
+		{
+			if(0.1>abs(_F(i)))
+			{
+				res(i)=0.0;
+			}
+			else
+			{
+				res(i)=_F(i);
+			}
+		}
+    }
+    return res;
+}
 
 MM_MassMat CS_hyumm::computeM(MM_JVec _q)
 {
@@ -790,6 +887,8 @@ SE3 CS_hyumm::computeFK(MM_JVec _q)
         }
     }
 
+    R_ee = T_ee.block<3,3>(0,0);
+
     return T_ee;
 }
 
@@ -852,7 +951,7 @@ MM_Jacobian CS_hyumm::computeJ_b(MM_JVec _q)
     casadi_int sz_w = 0;
 
     const double* arg[sz_arg];
-    double* res[sz_res*sz_res];
+    double* res[6*sz_res];
     casadi_int iw[sz_iw];
     double w[sz_w];
 
@@ -864,7 +963,7 @@ MM_Jacobian CS_hyumm::computeJ_b(MM_JVec _q)
     }
 
     // Set output buffers
-    double output_values[sz_res*sz_res]; // 6x6 matrix
+    double output_values[6*sz_res]; // 6x6 matrix
     for (casadi_int i = 0; i < sz_res; ++i) {
         res[i] = &output_values[i];
     }
@@ -877,12 +976,62 @@ MM_Jacobian CS_hyumm::computeJ_b(MM_JVec _q)
     }
 
     for (casadi_int i = 0; i < sz_res; ++i) {
-        for (casadi_int j = 0; j < sz_res; ++j) {   
-            J_b(j,i) = output_values[i * sz_res + j];
+        for (casadi_int j = 0; j < 6; ++j) {   
+            J_b(j,i) = output_values[i * 6 + j];
         }
     }
 
     return J_b;
+}
+
+
+MM_Jacobian CS_hyumm::computeJdot_b(MM_JVec _q, MM_JVec _dq)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> dJ_b_res = dJ_b_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = n_dof;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[2*sz_arg];
+    double* res[6*sz_res];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_pos[sz_arg];
+    double input_vel[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_pos[i] = _q(i);
+        input_vel[i] = _dq(i);
+        arg[2*i] = &input_pos[i];
+        arg[2*i+1] = &input_vel[i];
+    }
+
+    // Set output buffers
+    double output_values[6*sz_res]; // 6x6 matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (dJ_b_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        for (casadi_int j = 0; j < 6; ++j) {   
+            dJ_b(j,i) = output_values[i * 6 + j];
+        }
+    }
+
+    return dJ_b;
 }
 
 MM_Jacobian CS_hyumm::computeJ_s(MM_JVec _q)
@@ -898,7 +1047,7 @@ MM_Jacobian CS_hyumm::computeJ_s(MM_JVec _q)
     casadi_int sz_w = 0;
 
     const double* arg[sz_arg];
-    double* res[sz_res*sz_res];
+    double* res[6*sz_res];
     casadi_int iw[sz_iw];
     double w[sz_w];
 
@@ -910,7 +1059,7 @@ MM_Jacobian CS_hyumm::computeJ_s(MM_JVec _q)
     }
 
     // Set output buffers
-    double output_values[sz_res*sz_res]; // 6x6 matrix
+    double output_values[6*sz_res]; // 6x6 matrix
     for (casadi_int i = 0; i < sz_res; ++i) {
         res[i] = &output_values[i];
     }
@@ -923,12 +1072,61 @@ MM_Jacobian CS_hyumm::computeJ_s(MM_JVec _q)
     }
 
     for (casadi_int i = 0; i < sz_res; ++i) {
-        for (casadi_int j = 0; j < sz_res; ++j) {   
-            J_s(j,i) = output_values[i * sz_res + j];
+        for (casadi_int j = 0; j < 6; ++j) {   
+            J_s(j,i) = output_values[i * 6 + j];
         }
     }
 
     return J_s;
+}
+
+MM_Jacobian CS_hyumm::computeJdot_s(MM_JVec _q, MM_JVec _dq)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> dJ_s_res = dJ_s_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = n_dof;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[2*sz_arg];
+    double* res[6*sz_res];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_pos[sz_arg];
+    double input_vel[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_pos[i] = _q(i);
+        input_vel[i] = _dq(i);
+        arg[2*i] = &input_pos[i];
+        arg[2*i+1] = &input_vel[i];
+    }
+
+    // Set output buffers
+    double output_values[6*sz_res]; // 6x6 matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (dJ_s_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        for (casadi_int j = 0; j < 6; ++j) {   
+            dJ_s(j,i) = output_values[i * 6 + j];
+        }
+    }
+
+    return dJ_s;
 }
 
 MM_MassMat CS_hyumm::getM()
@@ -955,6 +1153,10 @@ SE3 CS_hyumm::getFK()
 {
     return T_ee;
 }
+SO3 CS_hyumm::getRMat()
+{
+    return R_ee;
+}
 MM_Jacobian_CoM CS_hyumm::getJ_com()
 {
     return J_com;
@@ -967,6 +1169,15 @@ MM_Jacobian CS_hyumm::getJ_s()
 {
     return J_s;
 }
+MM_Jacobian CS_hyumm::getJdot_b()
+{
+    return dJ_b;
+}
+MM_Jacobian CS_hyumm::getJdot_s()
+{
+    return dJ_s;
+}
+
 
 MM_JVec CS_hyumm::FrictionEstimation(MM_JVec dq)
 {
@@ -1014,12 +1225,15 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
     MM_JVec e = q_des-q;
     MM_JVec edot = dq_des-dq;
     double m_gam = 1;
+    double m_gam_mob = 0.02;
+    MM_MassMat m_mat = MM_MassMat::Zero();
+    m_mat.diagonal()<< m_gam_mob, m_gam_mob, m_gam_mob, m_gam, m_gam, m_gam, m_gam, m_gam, m_gam;
     
     eint = eint + e*period;	
     
     if(isUpdated)
     {
-        MM_JVec ddq_ref = ddq_des + m_gam*Kv*edot + m_gam*Kp*e + m_gam*tau_ext;
+        MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
         tau = M*ddq_ref + C*dq + G + tau_ext;
         isUpdated = false;
     }
@@ -1028,7 +1242,7 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
         M = computeM(q);
         C = computeC(q, dq);
         G = computeG(q);
-        MM_JVec ddq_ref = ddq_des + m_gam*Kv*edot + m_gam*Kp*e + m_gam*tau_ext;
+        MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
         tau = M*ddq_ref+C*dq+G + tau_ext;
     }
     return tau;   

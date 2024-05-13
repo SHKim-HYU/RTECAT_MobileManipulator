@@ -65,8 +65,9 @@ double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second un
 #define FT_SET_BIAS 		0x00000111
 #define FT_UNSET_BIAS 		0x00000011
 
-// double ft_offset[6] = {30.25, -51.20, -51.40, -1.084, -0.011, 4.31};
-double ft_offset[6] = {0.0,};
+double ft_offset[6] = {-31.70, 24.5, 55.85, -0.075, 0.325, 1.83};
+// double ft_offset[6] = {0.0,};
+se3 F_tmp;
 
 // For RT thread management
 static int run = 1;
@@ -170,58 +171,6 @@ typedef struct MOB_ROBOT_INFO{
     MOB_MOTOR_INFO motor;
 }MOB_ROBOT_INFO;
 
-// Arm
-typedef struct ARM_STATE{
-	Arm_JVec q;
-	Arm_JVec q_dot;
-	Arm_JVec q_ddot;
-	Arm_JVec tau;
-	Arm_JVec tau_fric;
-	Arm_JVec tau_ext;
-	Arm_JVec tau_aux;
-	Arm_JVec e;
-	Arm_JVec eint;
-	Arm_JVec edot;
-	Arm_JVec G;
-
-	SE3 	 T;                           //Task space
-	Vector6d x_dot;
-	Vector6d x_ddot;
-	Vector6d F;
-	Vector6d F_CB;
-    Vector6d F_ext;
-    
-    double s_time;
-}arm_state;
-
-typedef struct ARM_MOTOR_INFO{
-    double torque_const[NRMK_DRIVE_NUM];
-    double gear_ratio[NRMK_DRIVE_NUM];
-    double rate_current[NRMK_DRIVE_NUM];
-}arm_Motor_Info;
-
-typedef struct ARM_ROBOT_INFO{
-	int Position;
-	int q_inc[NRMK_DRIVE_NUM];
-    int dq_inc[NRMK_DRIVE_NUM];
-	int tau_per[NRMK_DRIVE_NUM];
-	int statusword[NRMK_DRIVE_NUM];
-    int modeofop[NRMK_DRIVE_NUM];
-
-	Arm_JVec q_target;
-	Arm_JVec qdot_target;
-	Arm_JVec qddot_target;
-	Arm_JVec traj_time;
-	unsigned int idx;
-
-	ARM_STATE act;
-	ARM_STATE des;
-	ARM_STATE nom;
-	ARM_STATE sim;
-
-    ARM_MOTOR_INFO motor;
-}ARM_ROBOT_INFO;
-
 // Mobile Manipulator
 typedef struct MM_STATE{
 	MM_JVec q;			// x, y, th, q1, q2, q3, q4, q5, q6
@@ -236,6 +185,7 @@ typedef struct MM_STATE{
 	MM_JVec edot;
 
 	SE3 	 T;                           //Task space
+	SO3		 R;
 	Vector6d x_dot;
 	Vector6d x_ddot;
 	Vector6d F;
@@ -271,6 +221,14 @@ Arm_JVec NRIC_K_gamma;
 Arm_JVec Kp_n;
 Arm_JVec Kd_n;
 Arm_JVec Ki_n;
+
+MM_JVec NRIC_Kp_mm;
+MM_JVec NRIC_Ki_mm;
+MM_JVec NRIC_K_gamma_mm;
+
+MM_JVec Kp_n_mm;
+MM_JVec Kd_n_mm;
+MM_JVec Ki_n_mm;
 
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;

@@ -92,10 +92,21 @@
 
 #define EFFICIENCY 75.0 // Gear efficiency
 
+// Tool Information [Tip]
+#define Ixx 0.00012118
+#define Iyy 0.00012118
+#define Izz 0.00000861
+#define X_com 0.0
+#define Y_com 0.0
+#define Z_com 0.0355073
+#define mass_tool 0.06
+// Tool Information [FT Sensor]
+#define mass_FT 0.02
+
 // 4. Type Definition
 typedef Eigen::Matrix<double, 4, 4> SE3;
 typedef Eigen::Matrix<double, 3, 3> SO3;
-typedef Eigen::Matrix<double, 4, 4> se3;
+typedef Eigen::Matrix<double, 6, 1> se3;
 typedef Eigen::Matrix<double, 3, 3> so3;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;   
 typedef Eigen::Matrix<float, 6, 1> Vector6f;  

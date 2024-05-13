@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
+#include "LieOperator.h"
 #include "PropertyDefinition.h"
 
 typedef long long int casadi_int;
@@ -15,7 +16,7 @@ typedef int (*eval_t)(const double**, double**, casadi_int*, double*, int);
 using namespace Eigen;
 using namespace std;
 
-class CS_hyumm {
+class CS_hyumm : public LieOperator  {
 public:
 	CS_hyumm();
 	
@@ -41,7 +42,10 @@ public:
 	void updateRobot(MM_JVec _q, MM_JVec _dq);
 
 	MM_JVec computeFD(MM_JVec _q, MM_JVec _dq, MM_JVec _tau);
-	void computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom);
+	void computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom, MM_JVec &_ddq_nom);
+
+	se3 computeF_Tool(se3 _dx, se3 _ddx);
+	se3 computeF_Threshold(se3 _F);
 
 	MM_MassMat computeM(MM_JVec _q);
 	MM_MassMat computeMinv(MM_JVec _q);
@@ -55,6 +59,8 @@ public:
 	MM_Jacobian_CoM computeJ_com(MM_JVec _q);	
 	MM_Jacobian computeJ_b(MM_JVec _q);
 	MM_Jacobian computeJ_s(MM_JVec _q);
+	MM_Jacobian computeJdot_b(MM_JVec _q, MM_JVec _dq);
+	MM_Jacobian computeJdot_s(MM_JVec _q, MM_JVec _dq);
 
 	MM_MassMat getM();
 	MM_MassMat getMinv();
@@ -63,10 +69,13 @@ public:
 	Vector3d getCoM();
 
 	SE3 getFK();
+	SO3 getRMat();
 
 	MM_Jacobian_CoM getJ_com();
 	MM_Jacobian getJ_b();
 	MM_Jacobian getJ_s();
+	MM_Jacobian getJdot_b();
+	MM_Jacobian getJdot_s();
 
 	MM_JVec FrictionEstimation(MM_JVec dq);
 
@@ -87,8 +96,18 @@ private:
 	Vector3d CoM;
 
 	SE3 T_ee;
+	SO3 R_ee;
 	MM_Jacobian J_b, J_s;
+	MM_Jacobian dJ_b, dJ_s;
 	MM_Jacobian_CoM J_com;
+
+	Matrix6d A_tool, B_tool;
+
+	Vector3d r_floor;
+    Matrix3d r_ceil;
+	Vector6d G_tool;
+	Vector6d G_FT;
+	Vector6d F_FT;
 
 private:
 	bool isUpdated = false;
@@ -104,6 +123,8 @@ private:
 	void* G_handle;
 	void* J_s_handle;
 	void* J_b_handle;
+	void* dJ_s_handle;
+	void* dJ_b_handle;
 	void* J_com_handle;
 	void* FK_handle;
 	
@@ -115,6 +136,8 @@ private:
 	eval_t G_eval;
 	eval_t J_s_eval;
 	eval_t J_b_eval;
+	eval_t dJ_s_eval;
+	eval_t dJ_b_eval;
 	eval_t J_com_eval;
 	eval_t FK_eval;
 

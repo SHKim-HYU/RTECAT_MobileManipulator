@@ -7,10 +7,12 @@ gcc -fPIC -shared -O3 hyumm_fk.c -o hyumm_fk.so -lm
 gcc -fPIC -shared -O3 hyumm_fk_ee.c -o hyumm_fk_ee.so -lm
 gcc -fPIC -shared -O3 hyumm_fkrot_ee.c -o hyumm_fkrot_ee.so -lm
 gcc -fPIC -shared -O3 hyumm_id.c -o hyumm_id.so -lm
-gcc -fPIC -shared -O3 hyumm_J_b.c -o hyumm_J_b.so -lm
 gcc -fPIC -shared -O3 hyumm_J_fd.c -o hyumm_J_fd.so -lm
 gcc -fPIC -shared -O3 hyumm_J_id.c -o hyumm_J_id.so -lm
 gcc -fPIC -shared -O3 hyumm_J_s.c -o hyumm_J_s.so -lm
+gcc -fPIC -shared -O3 hyumm_J_b.c -o hyumm_J_b.so -lm
+gcc -fPIC -shared -O3 hyumm_dJ_s.c -o hyumm_dJ_s.so -lm
+gcc -fPIC -shared -O3 hyumm_dJ_b.c -o hyumm_dJ_b.so -lm
 gcc -fPIC -shared -O3 hyumm_CoM_x.c -o hyumm_CoM_x.so -lm
 gcc -fPIC -shared -O3 hyumm_J_com.c -o hyumm_J_com.so -lm
 

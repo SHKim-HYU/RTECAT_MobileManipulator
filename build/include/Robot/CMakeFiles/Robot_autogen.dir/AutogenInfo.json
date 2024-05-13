@@ -18,6 +18,11 @@
 			"EWIEGA46WW/moc_CS_hyumm.cpp"
 		],
 		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h",
+			"MU",
+			"EWIEGA46WW/moc_LieOperator.cpp"
+		],
+		[
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h",
 			"MU",
 			"EWIEGA46WW/moc_PropertyDefinition.cpp"
@@ -85,6 +90,10 @@
 		],
 		[
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.cpp",
+			"MU"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp",
 			"MU"
 		]
 	],

@@ -15,6 +15,8 @@ CS_Indy7::CS_Indy7()
     this->G.resize(this->n_dof);
     this->J_b.resize(6, this->n_dof);
     this->J_s.resize(6, this->n_dof);
+    this->dJ_b.resize(6, this->n_dof);
+    this->dJ_s.resize(6, this->n_dof);
 
     this->Kp.resize(this->n_dof, this->n_dof);
     this->Kv.resize(this->n_dof, this->n_dof);
@@ -131,6 +133,10 @@ CS_Indy7::CS_Indy7()
             break;
         }
     }
+
+    A_tool=Matrix6d::Zero(); B_tool=Matrix6d::Zero();
+    A_tool(0,0) = mass_tool; A_tool(1,1) = mass_tool; A_tool(2,2) = mass_tool;
+    A_tool(3,3) = Ixx; A_tool(4,4) = Iyy; A_tool(5,5) = Izz; 
 }
 
 void CS_Indy7::CSSetup(const string& _modelPath, double _period)// : loader_(_modelPath), period[sec]
@@ -150,6 +156,8 @@ void CS_Indy7::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     this->G.resize(this->n_dof);
     this->J_b.resize(6, this->n_dof);
     this->J_s.resize(6, this->n_dof);
+    this->dJ_b.resize(6, this->n_dof);
+    this->dJ_s.resize(6, this->n_dof);
 
     this->Kp.resize(this->n_dof, this->n_dof);
     this->Kv.resize(this->n_dof, this->n_dof);
@@ -318,6 +326,16 @@ void CS_Indy7::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     if (J_s_handle == 0) {
         throw std::runtime_error("Cannot open indy7_J_s.so");
     }
+    func_path = casadi_path + "_dJ_b.so";
+    dJ_b_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (dJ_b_handle == 0) {
+        throw std::runtime_error("Cannot open indy7_dJ_b.so");
+    }
+    func_path = casadi_path + "_dJ_s.so";
+    dJ_s_handle = dlopen(func_path.c_str(), RTLD_LAZY);
+    if (dJ_s_handle == 0) {
+        throw std::runtime_error("Cannot open indy7_dJ_s.so");
+    }
 
     // Reset error
     dlerror();
@@ -355,7 +373,14 @@ void CS_Indy7::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     if (dlerror()) {
         throw std::runtime_error("Function evaluation failed.");
     }
-
+    dJ_b_eval = (eval_t)dlsym(dJ_b_handle, "dJ_b");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
+    dJ_s_eval = (eval_t)dlsym(dJ_s_handle, "dJ_s");
+    if (dlerror()) {
+        throw std::runtime_error("Function evaluation failed.");
+    }
 }
 
 void CS_Indy7::setPIDgain(Arm_JVec _Kp, Arm_JVec _Kd, Arm_JVec _Ki)
@@ -397,6 +422,7 @@ void CS_Indy7::updateRobot(Arm_JVec _q, Arm_JVec _dq)
     G = computeG(_q); 
 
     J_b = computeJ_b(_q);
+    dJ_b = computeJdot_b(_q, _dq);
 
     T_ee = computeFK(_q);
 
@@ -462,7 +488,7 @@ Arm_JVec CS_Indy7::computeFD(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau)
 
 }
 
-void CS_Indy7::computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_q_nom, Arm_JVec &_dq_nom)
+void CS_Indy7::computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_q_nom, Arm_JVec &_dq_nom, Arm_JVec &_ddq_nom)
 {
     Arm_JVec k1, k2, k3, k4;
 
@@ -491,8 +517,18 @@ void CS_Indy7::computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_
     k4 = computeFD(_q3, _q_dot3, _tau);
     _q_nom = _q + (period / 6.0) * (_dq + 2 * (_q_dot1 + _q_dot2) + _q_dot3);
     _dq_nom = _dq + (period / 6.0) * (k1 + 2 * (k2 + k3) + k4);
+    _ddq_nom = k1;
 }
 
+se3 CS_Indy7::computeF_Tool(se3 _dx, se3 _ddx)
+{
+    se3 res;
+    Matrix6d adj = adjointMatrix(_dx);
+    B_tool = A_tool*adj - adj.transpose()*A_tool;
+
+    res = A_tool*_ddx + B_tool*_dx;
+    return res;
+}
 
 Arm_MassMat CS_Indy7::computeM(Arm_JVec _q)
 {
@@ -775,6 +811,55 @@ Arm_Jacobian CS_Indy7::computeJ_b(Arm_JVec _q)
     return J_b;
 }
 
+Arm_Jacobian CS_Indy7::computeJdot_b(Arm_JVec _q, Arm_JVec _dq)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> dJ_b_res = dJ_b_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = n_dof;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[2*sz_arg];
+    double* res[6*sz_res];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_pos[sz_arg];
+    double input_vel[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_pos[i] = _q(i);
+        input_vel[i] = _dq(i);
+        arg[2*i] = &input_pos[i];
+        arg[2*i+1] = &input_vel[i];
+    }
+
+    // Set output buffers
+    double output_values[6*sz_res]; // 6x6 matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (dJ_b_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        for (casadi_int j = 0; j < 6; ++j) {   
+            dJ_b(j,i) = output_values[i * 6 + j];
+        }
+    }
+
+    return dJ_b;
+}
+
 Arm_Jacobian CS_Indy7::computeJ_s(Arm_JVec _q)
 {
     // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
@@ -821,6 +906,55 @@ Arm_Jacobian CS_Indy7::computeJ_s(Arm_JVec _q)
     return J_s;
 }
 
+Arm_Jacobian CS_Indy7::computeJdot_s(Arm_JVec _q, Arm_JVec _dq)
+{
+    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
+    // vector<casadi::DM> arg = {q_dm};
+    // vector<casadi::DM> dJ_s_res = dJ_s_cs(arg);
+
+    // Allocate input/output buffers and work vectors
+    casadi_int sz_arg = n_dof;
+    casadi_int sz_res = n_dof;
+    casadi_int sz_iw = 0;
+    casadi_int sz_w = 0;
+
+    const double* arg[2*sz_arg];
+    double* res[6*sz_res];
+    casadi_int iw[sz_iw];
+    double w[sz_w];
+
+    // Set input values
+    double input_pos[sz_arg];
+    double input_vel[sz_arg];
+    for (casadi_int i = 0; i < sz_arg; ++i) {
+        input_pos[i] = _q(i);
+        input_vel[i] = _dq(i);
+        arg[2*i] = &input_pos[i];
+        arg[2*i+1] = &input_vel[i];
+    }
+
+    // Set output buffers
+    double output_values[6*sz_res]; // 6x6 matrix
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        res[i] = &output_values[i];
+    }
+
+    // Evaluate the function
+    int mem = 0;  // No thread-local memory management
+    
+    if (dJ_s_eval(arg, res, iw, w, mem)) {
+        throw std::runtime_error("Function evaluation failed.\n");
+    }
+
+    for (casadi_int i = 0; i < sz_res; ++i) {
+        for (casadi_int j = 0; j < 6; ++j) {   
+            dJ_s(j,i) = output_values[i * 6 + j];
+        }
+    }
+
+    return dJ_s;
+}
+
 Arm_MassMat CS_Indy7::getM()
 {
     return M;
@@ -849,12 +983,20 @@ Arm_Jacobian CS_Indy7::getJ_s()
 {
     return J_s;
 }
+Arm_Jacobian CS_Indy7::getJdot_b()
+{
+    return dJ_b;
+}
+Arm_Jacobian CS_Indy7::getJdot_s()
+{
+    return dJ_s;
+}
 
 Arm_JVec CS_Indy7::FrictionEstimation(Arm_JVec dq)
 {
     Arm_JVec tau_fric;
     
-    for (int i; i<NRMK_DRIVE_NUM; i++)
+    for (int i = 0; i<NRMK_DRIVE_NUM; i++)
 	{
 		if(dq(i)>0.0)
 			tau_fric(i) = Fc(i)+Fv1(i)*(1-exp(-fabs(dq(i)/Fv2(i))));

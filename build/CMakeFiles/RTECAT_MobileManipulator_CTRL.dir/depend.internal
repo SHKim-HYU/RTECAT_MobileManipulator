@@ -183,6 +183,7 @@ CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client
  ../include/QtWidgets/QtButtonLedIndicator.h
  ../include/Robot/CS_Indy7.h
  ../include/Robot/CS_hyumm.h
+ ../include/Robot/LieOperator.h
  ../include/Robot/PropertyDefinition.h
  ../include/Robot/ServoAxis_Core.h
  ../include/Robot/ServoAxis_Motor.h

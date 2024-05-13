@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
+#include "LieOperator.h"
 #include "PropertyDefinition.h"
 
 typedef long long int casadi_int;
@@ -15,7 +16,7 @@ typedef int (*eval_t)(const double**, double**, casadi_int*, double*, int);
 using namespace Eigen;
 using namespace std;
 
-class CS_Indy7 {
+class CS_Indy7 : public LieOperator {
 public:
 	CS_Indy7();
 	
@@ -41,7 +42,9 @@ public:
 	void updateRobot(Arm_JVec _q, Arm_JVec _dq);
 
 	Arm_JVec computeFD(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau);
-	void computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_q_nom, Arm_JVec &_dq_nom);
+	void computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_q_nom, Arm_JVec &_dq_nom, Arm_JVec &_ddq_nom);
+
+	se3 computeF_Tool(se3 _dx, se3 _ddx);
 
 	Arm_MassMat computeM(Arm_JVec _q);
 	Arm_MassMat computeMinv(Arm_JVec _q);
@@ -52,6 +55,8 @@ public:
 
 	Arm_Jacobian computeJ_b(Arm_JVec _q);
 	Arm_Jacobian computeJ_s(Arm_JVec _q);
+	Arm_Jacobian computeJdot_b(Arm_JVec _q, Arm_JVec _dq);
+	Arm_Jacobian computeJdot_s(Arm_JVec _q, Arm_JVec _dq);
 
 	Arm_MassMat getM();
 	Arm_MassMat getMinv();
@@ -62,6 +67,8 @@ public:
 
 	Arm_Jacobian getJ_b();
 	Arm_Jacobian getJ_s();
+	Arm_Jacobian getJdot_b();
+	Arm_Jacobian getJdot_s();
 
 	Arm_JVec FrictionEstimation(Arm_JVec dq);
 
@@ -82,6 +89,9 @@ private:
 
 	SE3 T_ee;
 	Arm_Jacobian J_b, J_s;
+	Arm_Jacobian dJ_b, dJ_s;
+
+	Matrix6d A_tool, B_tool;
 
 private:
 	bool isUpdated = false;
@@ -96,6 +106,8 @@ private:
 	void* G_handle;
 	void* J_s_handle;
 	void* J_b_handle;
+	void* dJ_s_handle;
+	void* dJ_b_handle;
 	void* FK_handle;
 	
 	eval_t FD_eval;
@@ -105,6 +117,8 @@ private:
 	eval_t G_eval;
 	eval_t J_s_eval;
 	eval_t J_b_eval;
+	eval_t dJ_s_eval;
+	eval_t dJ_b_eval;
 	eval_t FK_eval;
 
 	// casadi::Function fd_cs, M_cs, Minv_cs, C_cs, G_cs, J_s_cs, J_b_cs, FK_cs;

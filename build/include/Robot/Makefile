@@ -240,6 +240,33 @@ CS_hyumm.cpp.s:
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/CS_hyumm.cpp.s
 .PHONY : CS_hyumm.cpp.s
 
+LieOperator.o: LieOperator.cpp.o
+
+.PHONY : LieOperator.o
+
+# target to build an object file
+LieOperator.cpp.o:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.o
+.PHONY : LieOperator.cpp.o
+
+LieOperator.i: LieOperator.cpp.i
+
+.PHONY : LieOperator.i
+
+# target to preprocess a source file
+LieOperator.cpp.i:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.i
+.PHONY : LieOperator.cpp.i
+
+LieOperator.s: LieOperator.cpp.s
+
+.PHONY : LieOperator.s
+
+# target to generate assembly for a file
+LieOperator.cpp.s:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.s
+.PHONY : LieOperator.cpp.s
+
 Robot_autogen/mocs_compilation.o: Robot_autogen/mocs_compilation.cpp.o
 
 .PHONY : Robot_autogen/mocs_compilation.o
@@ -287,6 +314,9 @@ help:
 	@echo "... CS_hyumm.o"
 	@echo "... CS_hyumm.i"
 	@echo "... CS_hyumm.s"
+	@echo "... LieOperator.o"
+	@echo "... LieOperator.i"
+	@echo "... LieOperator.s"
 	@echo "... Robot_autogen/mocs_compilation.o"
 	@echo "... Robot_autogen/mocs_compilation.i"
 	@echo "... Robot_autogen/mocs_compilation.s"
