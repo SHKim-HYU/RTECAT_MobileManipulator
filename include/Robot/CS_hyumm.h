@@ -80,16 +80,17 @@ public:
 	MM_JVec FrictionEstimation(MM_JVec dq);
 
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
-	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec tau_ext);
+	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
     void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
     
     MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
-	MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec tau_ext);
+	MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
 	MM_JVec NRIC(MM_JVec q_r, MM_JVec dq_r, MM_JVec q_n, MM_JVec dq_n);
+	void computeAlpha(MM_JVec edot, MM_JVec tau_c);
 
 private:
 	MM_JVec q, dq, ddq;
-	MM_JVec tau, ddq_res;
+	MM_JVec tau, tau_bd, tau_ext, ddq_res;
 	MM_JVec e, eint;
 	MM_MassMat M, Minv, C;
 	MM_JVec G;
@@ -164,6 +165,8 @@ private:
 	MM_JVec Fc;
 	MM_JVec Fv1;
 	MM_JVec Fv2;
+
+	double alpha = 0.0;
 
 };
 #endif // CS_HYUMM_H

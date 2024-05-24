@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <queue>
 #include <sys/mman.h>
 
 #include <sched.h>
@@ -48,24 +49,9 @@
 unsigned int cycle_ns = 1000000; // 1 ms
 double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second unit
 
-#define FT_START_DEVICE 	0x0000000B
-#define FT_STOP_DEVICE 		0x0000000C
 
-#define FT_SET_FILTER_500 	0x00010108
-#define FT_SET_FILTER_300 	0x00020108
-#define FT_SET_FILTER_200 	0x00030108
-#define FT_SET_FILTER_150 	0x00040108
-#define FT_SET_FILTER_100 	0x00050108
-#define FT_SET_FILTER_50 	0x00060108
-#define FT_SET_FILTER_40 	0x00070108
-#define FT_SET_FILTER_30 	0x00080108
-#define FT_SET_FILTER_20 	0x00090108
-#define FT_SET_FILTER_10 	0x000A0108
 
-#define FT_SET_BIAS 		0x00000111
-#define FT_UNSET_BIAS 		0x00000011
-
-double ft_offset[6] = {-31.70, 24.5, 55.85, -0.075, 0.325, 1.83};
+double ft_offset[6] = {-31.70, 24.45, 56.50, -0.075, 0.335, 1.81};
 // double ft_offset[6] = {0.0,};
 se3 F_tmp;
 
@@ -73,6 +59,7 @@ se3 F_tmp;
 static int run = 1;
 
 unsigned long periodCycle = 0, worstCycle = 0;
+unsigned long periodLoop = 0, worstLoop = 0;
 unsigned int overruns = 0;
 
 double act_max[4] = {0.0,};
@@ -92,6 +79,7 @@ const int 	 TauADC_arm[NRMK_DRIVE_NUM] = {TORQUE_ADC_500,TORQUE_ADC_500,TORQUE_A
 const double TauK_arm[NRMK_DRIVE_NUM] = {TORQUE_CONST_500,TORQUE_CONST_500,TORQUE_CONST_200,TORQUE_CONST_100,TORQUE_CONST_100,TORQUE_CONST_100};
 const int 	 dirQ_arm[NRMK_DRIVE_NUM] = {-1,-1,1,-1,-1,-1};
 const int 	 dirTau_arm[NRMK_DRIVE_NUM] = {-1,-1,1,-1,-1,-1};
+const double qdotLimit[NRMK_DRIVE_NUM] = {2*PI, 2*PI, 2*PI, 2*PI, 2*PI, 3*PI};
 NRMKHelper::ServoAxis_Motor Axis_MM[MM_DOF_NUM];
 
 // Robotous FT EtherCAT
@@ -109,8 +97,6 @@ Ecat_iServo ecat_iservo[MOBILE_DRIVE_NUM];
 EcatNRMK_Drive ecat_drive[NRMK_DRIVE_NUM];
 EcatNRMK_Tool ecat_tool[NRMK_TOOL_NUM];
 
-int offset_junction = 1;
-
 // When all slaves or drives reach OP mode,
 // system_ready becomes 1.
 int system_ready = 0;
@@ -121,97 +107,6 @@ double gt=0;
 // Trajectory parameers
 double traj_time=0;
 int motion=-1;
-
-// Mobile
-typedef struct MOB_STATE{
-	Mob_JVec q;
-	Mob_JVec q_dot;
-	Mob_JVec q_ddot;
-	Mob_JVec tau;
-	Mob_JVec tau_ext;
-	Mob_JVec e;
-	Mob_JVec eint;
-	Mob_JVec edot;
-	Mob_JVec G;
-
-	Vector3d x;                           //Task space
-	Vector3d x_dot;
-	Vector3d x_ddot;
-	Vector3d F;
-	Vector3d F_CB;
-    Vector3d F_ext;
-    
-    double s_time;
-}mob_state;
-
-typedef struct MOB_MOTOR_INFO{
-    double torque_const[MOBILE_DRIVE_NUM];
-    double gear_ratio[MOBILE_DRIVE_NUM];
-    double rate_current[MOBILE_DRIVE_NUM];
-}mob_Motor_Info;
-
-typedef struct MOB_ROBOT_INFO{
-	int Position;
-	int q_inc[MOBILE_DRIVE_NUM];
-    int dq_inc[MOBILE_DRIVE_NUM];
-	int tau_per[MOBILE_DRIVE_NUM];
-	int statusword[MOBILE_DRIVE_NUM];
-    int modeofop[MOBILE_DRIVE_NUM];
-
-	Mob_JVec q_target;
-	Mob_JVec qdot_target;
-	Mob_JVec qddot_target;
-	Mob_JVec traj_time;
-	unsigned int idx;
-
-	MOB_STATE act;
-	MOB_STATE des;
-	MOB_STATE nom;
-
-    MOB_MOTOR_INFO motor;
-}MOB_ROBOT_INFO;
-
-// Mobile Manipulator
-typedef struct MM_STATE{
-	MM_JVec q;			// x, y, th, q1, q2, q3, q4, q5, q6
-	MM_JVec q_dot;		// vx, vy, wz, dq1, dq2, dq3, dq4, dq5, dq6
-	MM_JVec q_ddot;
-	MM_JVec tau;		// Fx, Fy, Tz, tau1, tau2, tau3, tau4, tau5, tau6
-	MM_JVec tau_fric;
-	MM_JVec tau_ext;
-	MM_JVec tau_aux;
-	MM_JVec e;
-	MM_JVec eint;
-	MM_JVec edot;
-
-	SE3 	 T;                           //Task space
-	SO3		 R;
-	Vector6d x_dot;
-	Vector6d x_ddot;
-	Vector6d F;
-	Vector6d F_CB;
-    Vector6d F_ext;
-
-	Vector3d CoM_x;
-	MM_Jacobian_CoM J_com;
-    
-    double s_time;
-}mm_state;
-
-typedef struct MM_ROBOT_INFO{
-
-	MM_JVec q_target;
-	MM_JVec qdot_target;
-	MM_JVec qddot_target;
-	MM_JVec traj_time;
-	unsigned int idx;
-
-	MM_STATE act;
-	MM_STATE des;
-	MM_STATE nom;
-	MM_STATE sim;
-
-}MM_ROBOT_INFO;
 
 // Controller Gains
 Arm_JVec NRIC_Kp;
@@ -233,5 +128,6 @@ MM_JVec Ki_n_mm;
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;
 Mob_Jacobian J_mob;
+
 
 #endif  // /* RTECAT_MOBILEMANIPULATOR_CLIENT_H */

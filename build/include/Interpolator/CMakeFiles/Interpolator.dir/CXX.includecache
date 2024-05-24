@@ -6,3 +6,5 @@
 
 #IncludeRegexTransform: 
 
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Interpolator/Interpolator_autogen/mocs_compilation.cpp
+

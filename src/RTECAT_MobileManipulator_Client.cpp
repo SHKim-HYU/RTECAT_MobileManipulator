@@ -41,9 +41,9 @@ int initAxes()
 	{	
 		Axis_Motor[i].setGearRatio(gearRatio_mob[i]);
 		Axis_Motor[i].setGearEfficiency(EFFICIENCY);
-		Axis_Motor[i].setPulsePerRevolution(ecat_master.SDO_ENCODER_RESOLUTION(i+offset_junction));
-		Axis_Motor[i].setTauRateCur(((double)ecat_master.SDO_RATE_CURRENT(i+offset_junction))/1000.0);
-		Axis_Motor[i].setTauK(((double)ecat_master.SDO_TORQUE_CONSTANT(i+offset_junction))/1000000.0);
+		Axis_Motor[i].setPulsePerRevolution(ecat_master.SDO_ENCODER_RESOLUTION(i+OFFSET_NUM));
+		Axis_Motor[i].setTauRateCur(((double)ecat_master.SDO_RATE_CURRENT(i+OFFSET_NUM))/1000.0);
+		Axis_Motor[i].setTauK(((double)ecat_master.SDO_TORQUE_CONSTANT(i+OFFSET_NUM))/1000000.0);
 		Axis_Motor[i].setZeroPos(zeroPos_mob[i]);
 
 		Axis_Motor[i].setDirQ(dirQ_mob[i]);
@@ -69,6 +69,7 @@ int initAxes()
 		Axis_Core[i].setTauADC(TauADC_arm[i]);
 		Axis_Core[i].setTauK(TauK_arm[i]);
 		Axis_Core[i].setZeroPos(zeroPos_arm[i]);
+		Axis_Core[i].setVelLimits(qdotLimit[i], -qdotLimit[i]);
 
 		Axis_Core[i].setDirQ(dirQ_arm[i]);
 		Axis_Core[i].setDirTau(dirTau_arm[i]);
@@ -194,23 +195,16 @@ void readData()
 	for(int i=0; i<NRMK_TOOL_NUM; i++)
 	{
 		// Update RFT data
-		if (ecat_tool[i].FT_Raw_Fx_==0 && ecat_tool[i].FT_Raw_Fy_==0 && ecat_tool[i].FT_Raw_Fz_==0)
+		if (ecat_tool[i].FT_Raw_F[0] ==0 && ecat_tool[i].FT_Raw_F[1] ==0 && ecat_tool[i].FT_Raw_F[2] ==0)
 		{
-			F_tmp(0) = 0.0;
-			F_tmp(1) = 0.0;
-			F_tmp(2) = 0.0;
-			F_tmp(3) = 0.0;
-			F_tmp(4) = 0.0;
-			F_tmp(5) = 0.0;
+			F_tmp = se3::Zero();
 		}
 		else{
-			F_tmp(0) = (double)ecat_tool[i].FT_Raw_Fx_ / force_divider - ft_offset[0];
-			F_tmp(1) = (double)ecat_tool[i].FT_Raw_Fy_ / force_divider - ft_offset[1];
-			F_tmp(2) = (double)ecat_tool[i].FT_Raw_Fz_ / force_divider - ft_offset[2];
-			F_tmp(3) = (double)ecat_tool[i].FT_Raw_Tx_ / torque_divider - ft_offset[3];
-			F_tmp(4) = (double)ecat_tool[i].FT_Raw_Ty_ / torque_divider - ft_offset[4];
-			F_tmp(5) = (double)ecat_tool[i].FT_Raw_Tz_ / torque_divider - ft_offset[5];
-
+			for(int j=0; j<3; j++)
+			{
+				F_tmp(j) = (double)ecat_tool[i].FT_Raw_F[j] / force_divider - ft_offset[j];
+				F_tmp(j+3) = (double)ecat_tool[i].FT_Raw_T[j] / torque_divider - ft_offset[j+3];
+			}
 		}
 	}
 }
@@ -223,11 +217,13 @@ void trajectory_generation(){
 	    switch(motion)
 	    {
 	    case 1:
-			info_mm.q_target(0)=0.3; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.707; info_mm.q_target(5)=-1.5709;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-0.707; info_mm.q_target(8)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
 	    	traj_time = 3;
-	    	motion++;
+	    	// motion++;
 			// motion=1;
 	        break;
 	    case 2:
@@ -301,6 +297,7 @@ void compute()
 		
 	se3 F_mometum = cs_hyumm.computeF_Tool(info_mm.act.x_dot, info_mm.act.x_ddot);
 	
+	// info_mm.act.F = F_tmp-F_mometum;
 	info_mm.act.F = cs_hyumm.computeF_Threshold(F_tmp-F_mometum);
 	info_mm.act.tau_ext = J_b_mm.transpose()*(info_mm.act.F);
 
@@ -355,13 +352,10 @@ void writeData()
             {
                 temp = -2000;
             }
-            // rt_printf("temp: %d\n\n", temp);
-            // ecat_master.RxPDO1_SEND(i, (short)temp);
             ecat_iservo[i-1].writeTorque(temp);
         }
         else if (ecat_iservo[i-1].mode_of_operation_ == ecat_iservo[i-1].MODE_CYCLIC_SYNC_VELOCITY)
         {
-            // rt_printf("velocity: %d\n",Axis_Motor[i-1].getDesVelInRPM());
             ecat_iservo[i-1].writeVelocity(Axis_Motor[i-1].getDesVelInRPM(info_mob.des.tau(i-1)));
         }
 		ecat_master.RxUpdate();
@@ -383,6 +377,9 @@ void writeData()
 void motor_run(void *arg)
 {
     RTIME beginCycle, endCycle;
+	RTIME beginCyclebuf;
+
+	beginCyclebuf = 0;
    
     memset(&info_mob, 0, sizeof(MOB_ROBOT_INFO));
 	memset(&info_mm, 0, sizeof(MM_ROBOT_INFO));
@@ -403,24 +400,26 @@ void motor_run(void *arg)
 	cs_hyumm.setNRICgain(NRIC_Kp_mm, NRIC_Ki_mm, NRIC_K_gamma_mm);
 	
 	// nominal
-	Kp_n_mm << 80.0, 80.0, 80.0, 50.0, 50.0, 30.0, 15.0, 15.0, 15.0;
-	Kd_n_mm << 50.0, 50.0, 50.0, 5.0, 5.0, 3.0, 1.5, 1.5, 1.5;
+	Kp_n_mm << 80.0, 80.0, 80.0, 50.0, 50.0, 30.0, 15.0, 15.0, 15;
+	Kd_n_mm << 55.0, 55.0, 55.0, 5.0, 5.0, 3.0, 1.5, 2.0, 1.5;
+	// Kp_n_mm << 8.0, 8.0, 8.0, 2.0, 2.0, 1.0, 0.50, 0.50, 0.50;
+	// Kd_n_mm << 5.0, 5.0, 5.0, 0.2, 0.2, 0.10, 0.05, 0.05, 0.05;
 	Ki_n_mm = MM_JVec::Zero();
 	cs_nom_hyumm.setPIDgain(Kp_n_mm, Kd_n_mm, Ki_n_mm);
 
     for(int j=0; j<MOBILE_DRIVE_NUM; ++j)
 	{
-		ecat_master.addSlaveiServo(0, j+offset_junction, &ecat_iservo[j]);
+		ecat_master.addSlaveiServo(0, j+OFFSET_NUM, &ecat_iservo[j]);
 		ecat_iservo[j].mode_of_operation_ = ecat_iservo[j].MODE_CYCLIC_SYNC_VELOCITY;
 	}
     for(int j=0; j<NRMK_DRIVE_NUM; ++j)
 	{
-		ecat_master.addSlaveNRMKdrive(0, j+offset_junction+MOBILE_DRIVE_NUM, &ecat_drive[j]);
+		ecat_master.addSlaveNRMKdrive(0, j+OFFSET_NUM+MOBILE_DRIVE_NUM, &ecat_drive[j]);
 		ecat_drive[j].mode_of_operation_ = ecat_drive[j].MODE_CYCLIC_SYNC_TORQUE;
 	}
     for(int j=0; j<NRMK_TOOL_NUM; ++j)
 	{
-		ecat_master.addSlaveNRMKtool(0, j+offset_junction+MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, &ecat_tool[j]);
+		ecat_master.addSlaveNRMKtool(0, j+OFFSET_NUM+MOBILE_DRIVE_NUM+NRMK_DRIVE_NUM, &ecat_tool[j]);
 	}
 
     initAxes();
@@ -468,6 +467,7 @@ void motor_run(void *arg)
         
         endCycle = rt_timer_read();
 		periodCycle = (unsigned long) endCycle - beginCycle;
+		periodLoop = (unsigned long) beginCycle - beginCyclebuf;
 
         if(isSlaveInit())
 		{
@@ -499,9 +499,15 @@ void motor_run(void *arg)
 				system_ready=true;;	//all drives have been done
 		} 
             
-        gt+= period;
-        if (periodCycle > cycle_ns) overruns++;
-        rt_task_wait_period(NULL); //wait for next cycle
+        
+		if(system_ready)
+		{
+			gt+= period;
+			if (periodCycle > cycle_ns) overruns++;
+			if (periodLoop > worstLoop) worstLoop = periodLoop;
+		}
+        beginCyclebuf = beginCycle;
+		rt_task_wait_period(NULL); //wait for next cycle
     }
 }
 
@@ -584,8 +590,8 @@ void print_run(void *arg)
 			itime+=step;
 			previous=now;
 
-			rt_printf("Time=%0.3lfs, cycle_dt=%lius,  overrun=%d\n", gt, periodCycle/1000, overruns);
-			
+			rt_printf("Time=%0.3lfs, cycle_dt=%lius, worst_cycle=%lius, overrun=%d\n", gt, periodCycle/1000, worstLoop/1000, overruns);
+			// /*
             rt_printf("Mobile Data\n");
 			rt_printf("Des_x: %lf, Des_y: %lf, Des_th: %lf\n", info_mm.des.q(0), info_mm.des.q(1), info_mm.des.q(2));
 			rt_printf("Act_x: %lf, Act_y: %lf, Act_th: %lf\n", info_mm.act.q(0), info_mm.act.q(1), info_mm.act.q(2));
@@ -609,11 +615,13 @@ void print_run(void *arg)
 				rt_printf("\t NomPos: %lf, NomVel: %lf, NomAcc :%lf\n",info_mm.nom.q(j), info_mm.nom.q_dot(j), info_mm.nom.q_ddot(j));
 				rt_printf("\t TarTor: %lf, ActTor: %lf, NomTor: %lf, ExtTor: %lf \n", info_mm.des.tau(j), info_mm.act.tau(j), info_mm.nom.tau(j), info_mm.act.tau_ext(j));
 			}
-			rt_printf("V: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_dot(0),info_mm.act.x_dot(1),info_mm.act.x_dot(2),info_mm.act.x_dot(3),info_mm.act.x_dot(4),info_mm.act.x_dot(5),info_mm.act.x_dot(6),info_mm.act.x_dot(7),info_mm.act.x_dot(8));
-			rt_printf("dV: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_ddot(0),info_mm.act.x_ddot(1),info_mm.act.x_ddot(2),info_mm.act.x_ddot(3),info_mm.act.x_ddot(4),info_mm.act.x_ddot(5),info_mm.act.x_ddot(6),info_mm.act.x_ddot(7),info_mm.act.x_ddot(8));
-			rt_printf("ReadFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.F(0),info_mm.act.F(1),info_mm.act.F(2),info_mm.act.F(3),info_mm.act.F(4),info_mm.act.F(5));
+			// rt_printf("V: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_dot(0),info_mm.act.x_dot(1),info_mm.act.x_dot(2),info_mm.act.x_dot(3),info_mm.act.x_dot(4),info_mm.act.x_dot(5),info_mm.act.x_dot(6),info_mm.act.x_dot(7),info_mm.act.x_dot(8));
+			// rt_printf("dV: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_ddot(0),info_mm.act.x_ddot(1),info_mm.act.x_ddot(2),info_mm.act.x_ddot(3),info_mm.act.x_ddot(4),info_mm.act.x_ddot(5),info_mm.act.x_ddot(6),info_mm.act.x_ddot(7),info_mm.act.x_ddot(8));
+			rt_printf("readFT: %lf, %lf, %lf, %lf, %lf, %lf\n", F_tmp(0),F_tmp(1),F_tmp(2),F_tmp(3),F_tmp(4),F_tmp(5));
+			rt_printf("resFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.F(0),info_mm.act.F(1),info_mm.act.F(2),info_mm.act.F(3),info_mm.act.F(4),info_mm.act.F(5));
 			rt_printf("tau_ext: %lf, %lf, %lf\n", info_mm.act.tau_ext(0), info_mm.act.tau_ext(1), info_mm.act.tau_ext(2));
 			rt_printf("\n");
+			// */
 		}
 		else
 		{

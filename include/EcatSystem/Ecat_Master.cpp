@@ -292,14 +292,14 @@ void Master::registerPDOInDomain(uint16_t alias, uint16_t position, std::vector<
 
 
         // print the domain pdo entry
-// #if defined(_DEBUG)
+#if defined(_DEBUG)
         std::cout << "{" << pdo_reg.alias <<", "<< pdo_reg.position;
         std::cout << ", 0x" << std::hex << pdo_reg.vendor_id;
         std::cout << ", 0x" << std::hex << pdo_reg.product_code;
         std::cout << ", 0x" << std::hex << pdo_reg.index;
         std::cout << ", 0x" << std::hex << (int)pdo_reg.subindex;
         std::cout << "}" << std::dec << std::endl;
-// #endif
+#endif
     }
 
     // set the last element to null
@@ -353,7 +353,8 @@ void Master::activateWithDC(uint8_t RefPosition, uint32_t SyncCycleNano)
     // register sync manager
     for (SlaveInfo& slave : m_slave_info)
     {
-    	ecrt_slave_config_dc(slave.config, 0x0000, SyncCycleNano, 0, 0, 0 );
+    	// ecrt_slave_config_dc(slave.config, 0x0300, SyncCycleNano, 0, 0, 0 );
+        ecrt_slave_config_dc(slave.config, 0x0000, SyncCycleNano, 0, 0, 0 );
     }
     printf("activeWithDC: ecrt_slave config dc is done\n");
     int res = ecrt_master_select_reference_clock(p_master, m_slave_info.at(RefPosition).config );  //error point

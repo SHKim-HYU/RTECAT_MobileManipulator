@@ -183,6 +183,8 @@ signal.h
 -
 unistd.h
 -
+queue
+-
 sys/mman.h
 -
 sched.h

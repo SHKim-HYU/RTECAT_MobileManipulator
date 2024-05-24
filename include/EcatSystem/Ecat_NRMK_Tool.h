@@ -70,22 +70,22 @@ public:
             iButton_ = EC_READ_U8(domain_address);
             break;			
 		case 9:
-            FT_Raw_Fx_= EC_READ_S16(domain_address);
+            FT_Raw_F[0]= EC_READ_S16(domain_address);
             break;
         case 10:
-            FT_Raw_Fy_= EC_READ_S16(domain_address);
+            FT_Raw_F[1]= EC_READ_S16(domain_address);
             break;
 		case 11:
-            FT_Raw_Fz_= EC_READ_S16(domain_address);
+            FT_Raw_F[2]= EC_READ_S16(domain_address);
             break;
         case 12:
-            FT_Raw_Tx_= EC_READ_S16(domain_address);
+            FT_Raw_T[0]= EC_READ_S16(domain_address);
             break;
         case 13:
-            FT_Raw_Ty_= EC_READ_S16(domain_address);
+            FT_Raw_T[1]= EC_READ_S16(domain_address);
             break;
         case 14:
-            FT_Raw_Tz_= EC_READ_S16(domain_address);
+            FT_Raw_T[2]= EC_READ_S16(domain_address);
             break;
         case 15:
             FT_OverloadStatus_= EC_READ_U8(domain_address);
@@ -141,6 +141,8 @@ public:
     int16_t  FT_Raw_Tx_         = 0;        // read
     int16_t  FT_Raw_Ty_         = 0;        // read
     int16_t  FT_Raw_Tz_         = 0; 		// read
+    int16_t FT_Raw_F[3]         = {0,};
+    int16_t FT_Raw_T[3]         = {0,};
     uint8_t   FT_OverloadStatus_ = 0; 		// read
     uint8_t   FT_ErrorFlag_      = 0;        // read
     

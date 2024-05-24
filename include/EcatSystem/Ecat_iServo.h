@@ -124,7 +124,7 @@ public:
 				state_ = deviceState(status_word_);
 				if (state_ != last_state_){
 					#if 1
-						// std::cout << "iServo_POS: " << slave_position << " " << ", iServo_STATE: " << device_state_str_[state_] << std::endl;
+						std::cout << "iServo_POS: " << slave_position << " " << ", iServo_STATE: " << device_state_str_[state_] << std::endl;
 					#endif
 				}
 			}

@@ -586,25 +586,25 @@ se3 CS_hyumm::computeF_Threshold(se3 _F)
 		}
 		else if(i==5)
 		{
+			if(0.005>abs(_F(i)))
+			{
+				res(i)=0.0;
+			}
+			else
+			{
+				res(i)=0.1*_F(i);
+				// res(i)=0.0;
+			}
+		}
+		else 
+		{
 			if(0.05>abs(_F(i)))
 			{
 				res(i)=0.0;
 			}
 			else
 			{
-				// F_tmp[i]=_F(i);
-				res(i)=0.0;
-			}
-		}
-		else 
-		{
-			if(0.1>abs(_F(i)))
-			{
-				res(i)=0.0;
-			}
-			else
-			{
-				res(i)=_F(i);
+				res(i)=1*_F(i);
 			}
 		}
     }
@@ -1220,21 +1220,27 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
     return tau;   
 }
 
-MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec tau_ext)
+MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext)
 {
     MM_JVec e = q_des-q;
     MM_JVec edot = dq_des-dq;
     double m_gam = 1;
+    // double m_gam = 10;
     double m_gam_mob = 0.02;
+    // double m_gam_mob = 0.2;
     MM_MassMat m_mat = MM_MassMat::Zero();
     m_mat.diagonal()<< m_gam_mob, m_gam_mob, m_gam_mob, m_gam, m_gam, m_gam, m_gam, m_gam, m_gam;
+    // m_mat.diagonal()<< m_gam_mob, m_gam_mob, m_gam_mob, 0.5, 0.5, 0.7, 0.7, 0.8, 1;
+    MM_JVec K;
+    K << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2;
     
+    tau_ext = _tau_ext;
     eint = eint + e*period;	
     
     if(isUpdated)
     {
         MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
-        tau = M*ddq_ref + C*dq + G + tau_ext;
+        tau = M*ddq_ref + C*dq + G + tau_ext - tau_bd;
         isUpdated = false;
     }
     else
@@ -1243,8 +1249,9 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
         C = computeC(q, dq);
         G = computeG(q);
         MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
-        tau = M*ddq_ref+C*dq+G + tau_ext;
+        tau = M*ddq_ref+C*dq+G + tau_ext - tau_bd;
     }
+    // tau = K.cwiseProduct(tau);
     return tau;   
 }
 
@@ -1284,12 +1291,13 @@ MM_JVec CS_hyumm::HinfControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des
     return tau;
 }
 
-MM_JVec CS_hyumm::HinfControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec tau_ext)
+MM_JVec CS_hyumm::HinfControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext)
 {
     MM_JVec e = q_des-q;
     MM_JVec edot = dq_des-dq;
     
     eint = eint + e*period;	
+    tau_ext = _tau_ext;
     
     if(isUpdated)
     {
@@ -1317,6 +1325,25 @@ MM_JVec CS_hyumm::NRIC(MM_JVec q_r, MM_JVec dq_r, MM_JVec q_n, MM_JVec dq_n)
     eint = eint + e*period;	
     
     tau = NRIC_K_gamma * (edot + NRIC_Kp*e + NRIC_Ki*eint);
+    computeAlpha(edot, tau);
+    tau_bd = alpha*tau;
+    tau = (1-alpha)*tau;
+
 
     return tau;
+}
+void CS_hyumm::computeAlpha(MM_JVec edot, MM_JVec tau_c)
+{
+    double edotc, edotx;
+    edotc = edot.transpose() * tau_c;
+    edotx = edot.transpose() * tau_ext;
+    if(edotc>0 && edotx >0)
+    {
+        if(edotc<edotx)
+            alpha=1.0;
+        else
+            alpha = edotx/edotc;
+    }
+    else
+        alpha = 0;
 }
