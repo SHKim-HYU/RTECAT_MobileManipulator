@@ -6,6 +6,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/Robot.dir/CS_hyumm.cpp.o"
   "CMakeFiles/Robot.dir/LieOperator.cpp.o"
   "CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.o"
+  "CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
   "libRobot.pdb"
   "libRobot.so"
 )

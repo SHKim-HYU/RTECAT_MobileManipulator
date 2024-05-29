@@ -19,14 +19,8 @@ Eigen/Dense
 -
 dlfcn.h
 -
-LieOperator.h
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
-PropertyDefinition.h
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
-
-/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
-Eigen/Dense
--
+liegroup_robotics.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
 PropertyDefinition.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
 
@@ -41,6 +35,14 @@ fstream
 -
 json/json.h
 -
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
+iostream
+-
+vector
+-
+PropertyDefinition.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
 
 /usr/include/eigen3/Eigen/Cholesky
 Core

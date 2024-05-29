@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/CS_hyumm.cpp.o"
   "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.o"
   "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/Robot_autogen/mocs_compilation.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.o"
+  "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -119,8 +119,8 @@ Eigen/Dense
 -
 dlfcn.h
 -
-LieOperator.h
-../include/Robot/LieOperator.h
+liegroup_robotics.h
+../include/Robot/liegroup_robotics.h
 PropertyDefinition.h
 ../include/Robot/PropertyDefinition.h
 
@@ -133,14 +133,8 @@ Eigen/Dense
 -
 dlfcn.h
 -
-LieOperator.h
-../include/Robot/LieOperator.h
-PropertyDefinition.h
-../include/Robot/PropertyDefinition.h
-
-../include/Robot/LieOperator.h
-Eigen/Dense
--
+liegroup_robotics.h
+../include/Robot/liegroup_robotics.h
 PropertyDefinition.h
 ../include/Robot/PropertyDefinition.h
 
@@ -167,6 +161,14 @@ fstream
 -
 json/json.h
 -
+
+../include/Robot/liegroup_robotics.h
+iostream
+-
+vector
+-
+PropertyDefinition.h
+../include/Robot/PropertyDefinition.h
 
 /home/robot/robot_ws/RTECAT_MobileManipulator/src/RTECAT_MobileManipulator_Client.cpp
 RTECAT_MobileManipulator_Client.h
@@ -234,6 +236,8 @@ ServoAxis_Motor.h
 ServoAxis_Core.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/src/ServoAxis_Core.h
 PropertyDefinition.h
+-
+liegroup_robotics.h
 -
 
 /home/robot/robot_ws/RTECAT_MobileManipulator/src/mainwindow.h

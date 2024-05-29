@@ -4,7 +4,7 @@ project(Robot LANGUAGES CXX)
 set(CMAKE_DEBUG_POSTFIX "d")
 
 
-file(GLOB SOURCE_FILES "ServoAxis.cpp" "ServoAxis.h" "PropertyDefinition.h" "CS_Indy7.cpp" "CS_Indy7.h" "CS_hyumm.cpp" "CS_hyumm.h" "LieOperator.h" "LieOperator.cpp")
+file(GLOB SOURCE_FILES "ServoAxis.cpp" "ServoAxis.h" "PropertyDefinition.h" "CS_Indy7.cpp" "CS_Indy7.h" "CS_hyumm.cpp" "CS_hyumm.h" "LieOperator.h" "LieOperator.cpp" "liegroup_robotics.h" "liegroup_robotics.cpp")
 
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

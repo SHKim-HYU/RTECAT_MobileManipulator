@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
-#include "LieOperator.h"
+#include "liegroup_robotics.h"
 #include "PropertyDefinition.h"
 
 typedef long long int casadi_int;
@@ -15,8 +15,9 @@ typedef int (*eval_t)(const double**, double**, casadi_int*, double*, int);
 
 using namespace Eigen;
 using namespace std;
+using namespace lr;
 
-class CS_hyumm : public LieOperator  {
+class CS_hyumm  {
 public:
 	CS_hyumm();
 	
@@ -38,14 +39,15 @@ public:
 	void setPIDgain(MM_JVec _Kp, MM_JVec _Kd, MM_JVec _Ki);
 	void setHinfgain(MM_JVec _Hinf_Kp, MM_JVec _Hinf_Kd, MM_JVec _Hinf_Ki, MM_JVec _Hinf_K_gamma);
 	void setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_gamma);
+	void setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K);
 
 	void updateRobot(MM_JVec _q, MM_JVec _dq);
 
 	MM_JVec computeFD(MM_JVec _q, MM_JVec _dq, MM_JVec _tau);
 	void computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom, MM_JVec &_ddq_nom);
 
-	se3 computeF_Tool(se3 _dx, se3 _ddx);
-	se3 computeF_Threshold(se3 _F);
+	Twist computeF_Tool(Twist _dx, Twist _ddx);
+	Twist computeF_Threshold(Twist _F);
 
 	MM_MassMat computeM(MM_JVec _q);
 	MM_MassMat computeMinv(MM_JVec _q);
@@ -77,10 +79,13 @@ public:
 	MM_Jacobian getJdot_b();
 	MM_Jacobian getJdot_s();
 
+	Twist getBodyTwist();
+
 	MM_JVec FrictionEstimation(MM_JVec dq);
 
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
+	MM_JVec TaskRobustControl(MM_JVec q, MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
     void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
     
     MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
@@ -96,11 +101,17 @@ private:
 	MM_JVec G;
 	Vector3d CoM;
 
+	SE3 T_M;
 	SE3 T_ee;
 	SO3 R_ee;
+	MM_ScrewList Slist, Blist;
 	MM_Jacobian J_b, J_s;
 	MM_Jacobian dJ_b, dJ_s;
 	MM_Jacobian_CoM J_com;
+
+	Twist V_b, V_s;
+	Twist V_dot;
+	Twist lambda, lambda_dot, lambda_int;
 
 	Matrix6d A_tool, B_tool;
 
@@ -143,6 +154,9 @@ private:
 	eval_t FK_eval;
 
 	// casadi::Function fd_cs, M_cs, Minv_cs, C_cs, G_cs, J_s_cs, J_b_cs, FK_cs;
+	Matrix6d Task_Kp;
+	Matrix6d Task_Kv;
+	MM_JMat Task_K;
 
 	MM_JMat M_imp;
     MM_JMat B_imp;

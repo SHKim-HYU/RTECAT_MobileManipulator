@@ -422,7 +422,7 @@ void CS_Indy7::updateRobot(Arm_JVec _q, Arm_JVec _dq)
     G = computeG(_q); 
 
     J_b = computeJ_b(_q);
-    dJ_b = computeJdot_b(_q, _dq);
+    // dJ_b = computeJdot_b(_q, _dq);
 
     T_ee = computeFK(_q);
 
@@ -520,10 +520,10 @@ void CS_Indy7::computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_
     _ddq_nom = k1;
 }
 
-se3 CS_Indy7::computeF_Tool(se3 _dx, se3 _ddx)
+Twist CS_Indy7::computeF_Tool(Twist _dx, Twist _ddx)
 {
-    se3 res;
-    Matrix6d adj = adjointMatrix(_dx);
+    Twist res;
+    Matrix6d adj = ad(_dx);
     B_tool = A_tool*adj - adj.transpose()*A_tool;
 
     res = A_tool*_ddx + B_tool*_dx;

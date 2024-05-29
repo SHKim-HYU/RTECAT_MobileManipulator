@@ -71,30 +71,30 @@ Matrix6d LieOperator::AdjointDualMatrix(SE3 _SE3)
 	return res;
 }
 
-Matrix6d LieOperator::adjointMatrix(se3 _se3)
+Matrix6d LieOperator::adjointMatrix(Twist _Twist)
 {
 	Matrix6d res;
 	res.setZero();
 
-	res.block(0, 0, 3, 3) = SkewMatrix(_se3.head(3));
-	res.block(3, 0, 3, 3) = SkewMatrix(_se3.tail(3));
-	res.block(3, 3, 3, 3) = SkewMatrix(_se3.head(3));
+	res.block(0, 0, 3, 3) = SkewMatrix(_Twist.head(3));
+	res.block(3, 0, 3, 3) = SkewMatrix(_Twist.tail(3));
+	res.block(3, 3, 3, 3) = SkewMatrix(_Twist.head(3));
 	return res;
 }
 
-Matrix6d LieOperator::adjointDualMatrix(se3 _se3)
+Matrix6d LieOperator::adjointDualMatrix(Twist _Twist)
 {
 	Matrix6d res;
 	res.setZero();
 
-	res.block(0, 0, 3, 3) = -SkewMatrix(_se3.head(3));
-	res.block(0, 3, 3, 3) = -SkewMatrix(_se3.tail(3));
-	res.block(3, 3, 3, 3) = -SkewMatrix(_se3.head(3));
+	res.block(0, 0, 3, 3) = -SkewMatrix(_Twist.head(3));
+	res.block(0, 3, 3, 3) = -SkewMatrix(_Twist.tail(3));
+	res.block(3, 3, 3, 3) = -SkewMatrix(_Twist.head(3));
 
 	return res;
 }
 
-SE3 LieOperator::SE3Matrix(se3 _Twist, double _q)
+SE3 LieOperator::SE3Matrix(Twist _Twist, double _q)
 {
 	Matrix4d res = Matrix4d::Identity();
 	Matrix3d i = Matrix3d::Identity();
@@ -137,7 +137,7 @@ Vector3d LieOperator::so3ToVec(Matrix3d& so3mat) {
     return v_ret;
 }
 /*
-Matrix<double, 7, 1> LieOperator::AxisAng6(se3 expc6) {
+Matrix<double, 7, 1> LieOperator::AxisAng6(Twist expc6) {
 	Matrix<double, 7, 1> S_theta;
 	Vector3d omg_theta,vec_theta;
 	double theta;
@@ -157,7 +157,7 @@ Matrix<double, 7, 1> LieOperator::AxisAng6(se3 expc6) {
 		return S_theta;
 	}
 }
-Matrix4d LieOperator::MatrixExp6(se3 _s, double _q) {
+Matrix4d LieOperator::MatrixExp6(Twist _s, double _q) {
 	Matrix3d so3, SO3;
 	Matrix4d SE3;
 	Vector3d v;

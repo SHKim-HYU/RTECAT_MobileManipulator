@@ -294,6 +294,33 @@ Robot_autogen/mocs_compilation.cpp.s:
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.s
 .PHONY : Robot_autogen/mocs_compilation.cpp.s
 
+liegroup_robotics.o: liegroup_robotics.cpp.o
+
+.PHONY : liegroup_robotics.o
+
+# target to build an object file
+liegroup_robotics.cpp.o:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o
+.PHONY : liegroup_robotics.cpp.o
+
+liegroup_robotics.i: liegroup_robotics.cpp.i
+
+.PHONY : liegroup_robotics.i
+
+# target to preprocess a source file
+liegroup_robotics.cpp.i:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.i
+.PHONY : liegroup_robotics.cpp.i
+
+liegroup_robotics.s: liegroup_robotics.cpp.s
+
+.PHONY : liegroup_robotics.s
+
+# target to generate assembly for a file
+liegroup_robotics.cpp.s:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.s
+.PHONY : liegroup_robotics.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -320,6 +347,9 @@ help:
 	@echo "... Robot_autogen/mocs_compilation.o"
 	@echo "... Robot_autogen/mocs_compilation.i"
 	@echo "... Robot_autogen/mocs_compilation.s"
+	@echo "... liegroup_robotics.o"
+	@echo "... liegroup_robotics.i"
+	@echo "... liegroup_robotics.s"
 .PHONY : help
 
 

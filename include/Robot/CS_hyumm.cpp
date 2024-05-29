@@ -27,6 +27,10 @@ CS_hyumm::CS_hyumm()
     this->Hinf_Ki.resize( this->n_dof, this->n_dof);
     this->Hinf_K_gamma.resize( this->n_dof, this->n_dof);
 
+    Task_Kp = Matrix6d::Zero();
+    Task_Kv = Matrix6d::Zero();
+    Task_K = MM_JMat::Zero();
+
     Hinf_Kp = MM_JMat::Zero();
     Hinf_Kv = MM_JMat::Zero();
     Hinf_Ki = MM_JMat::Zero();
@@ -44,7 +48,7 @@ CS_hyumm::CS_hyumm()
     eint = MM_JVec::Zero();
 
     r_floor << X_com, Y_com, Z_com;
-    r_ceil = SkewMatrix(r_floor); 
+    r_ceil = VecToso3(r_floor); 
     G_tool << 0, 0, -mass_tool*9.8, 0, 0, 0;
 
     for (int i=0; i<this->n_dof; ++i)
@@ -168,8 +172,23 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     this->Hinf_Ki.resize( this->n_dof, this->n_dof);
     this->Hinf_K_gamma.resize( this->n_dof, this->n_dof);
 
+    T_M << 1,0,0,0.3,
+			0,1,0,-0.1865,
+			0,0,1,1.7255,
+			0,0,0,1;
+
+	Slist << 1, 0, 0, 0, 0.5275, 0.9775, -0.0035, 1.3275, -0.1865,
+				0, 1, -0, -0.3, 1.17129e-16, 2.17049e-16, -0.3, 6.56142e-16, -0.3,
+				0, 0, 0, 0, -0.3, -0.3, -6.66134e-17, -0.3, -1.33227e-16,
+				0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, -1, -1, 0, -1, 0,
+				0, 0, 1, 1, 0, 0, 1, 0, 1;
+	Blist = Ad(TransInv(T_M)) * Slist;
+
+    lambda_int = Twist::Zero();
+
     r_floor << X_com, Y_com, Z_com;
-    r_ceil = SkewMatrix(r_floor); 
+    r_ceil = VecToso3(r_floor); 
     G_tool << 0, 0, -mass_tool*9.8, 0, 0, 0;
 	G_FT << 0, 0, -mass_FT*9.8, 0, 0, 0;
 
@@ -413,33 +432,31 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
 
 void CS_hyumm::setPIDgain(MM_JVec _Kp, MM_JVec _Kd, MM_JVec _Ki)
 {
-    for (int i=0; i<this->n_dof; ++i)
-    {
-        Kp(i,i) = _Kp(i);
-        Kv(i,i) = _Kd(i);
-        Ki(i,i) = _Ki(i);
-    }
+    Kp = _Kp.asDiagonal();
+    Kv = _Kd.asDiagonal();
+    Ki = _Ki.asDiagonal();
 }
 
 void CS_hyumm::setHinfgain(MM_JVec _Hinf_Kp, MM_JVec _Hinf_Kd, MM_JVec _Hinf_Ki, MM_JVec _Hinf_K_gamma)
 {
-    for (int i=0; i<this->n_dof; ++i)
-    {
-        Hinf_Kp(i,i) = _Hinf_Kp(i);
-        Hinf_Kv(i,i) = _Hinf_Kd(i);
-        Hinf_Ki(i,i) = _Hinf_Ki(i);
-        Hinf_K_gamma(i,i) = _Hinf_K_gamma(i);
-    }
+    Hinf_Kp = _Hinf_Kp.asDiagonal();
+    Hinf_Kv = _Hinf_Kd.asDiagonal();
+    Hinf_Ki = _Hinf_Ki.asDiagonal();
+    Hinf_K_gamma = _Hinf_K_gamma.asDiagonal();
 }
 
 void CS_hyumm::setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_gamma)
 {
-    for (int i=0; i<this->n_dof; ++i)
-    {
-        NRIC_Kp(i,i) = _NRIC_Kp(i);
-        NRIC_Ki(i,i) = _NRIC_Ki(i);
-        NRIC_K_gamma(i,i) = _NRIC_K_gamma(i);
-    }
+    NRIC_Kp = _NRIC_Kp.asDiagonal();
+    NRIC_Ki = _NRIC_Ki.asDiagonal();
+    NRIC_K_gamma = _NRIC_K_gamma.asDiagonal();
+}
+
+void CS_hyumm::setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K)
+{
+    Task_Kp = _Kp.asDiagonal();
+    Task_Kv = _Kv.asDiagonal();
+    Task_K = _K.asDiagonal();
 }
 
 void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
@@ -456,6 +473,8 @@ void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
 
     CoM = computeCoM(_q);
     J_com = computeJ_com(_q);
+
+    V_b = J_b*_dq;
 
     isUpdated=true;   
 }
@@ -550,10 +569,10 @@ void CS_hyumm::computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_no
     _ddq_nom = k1;
 }
 
-se3 CS_hyumm::computeF_Tool(se3 _dx, se3 _ddx)
+Twist CS_hyumm::computeF_Tool(Twist _dx, Twist _ddx)
 {
-    se3 res;
-    Matrix6d adj = adjointMatrix(_dx);
+    Twist res;
+    Matrix6d adj = ad(_dx);
     Matrix6d AdT = Matrix6d::Zero(); 
 
 	AdT.block<3,3>(0,0) = R_ee.transpose();
@@ -567,9 +586,9 @@ se3 CS_hyumm::computeF_Tool(se3 _dx, se3 _ddx)
     return res;
 }
 
-se3 CS_hyumm::computeF_Threshold(se3 _F)
+Twist CS_hyumm::computeF_Threshold(Twist _F)
 {
-    se3 res;
+    Twist res;
 
     for(int i=0; i<6; i++)
     {
@@ -987,49 +1006,7 @@ MM_Jacobian CS_hyumm::computeJ_b(MM_JVec _q)
 
 MM_Jacobian CS_hyumm::computeJdot_b(MM_JVec _q, MM_JVec _dq)
 {
-    // casadi::DM q_dm = casadi::DM(vector<double>(_q.data(), _q.data() + _q.size()));
-    // vector<casadi::DM> arg = {q_dm};
-    // vector<casadi::DM> dJ_b_res = dJ_b_cs(arg);
-
-    // Allocate input/output buffers and work vectors
-    casadi_int sz_arg = n_dof;
-    casadi_int sz_res = n_dof;
-    casadi_int sz_iw = 0;
-    casadi_int sz_w = 0;
-
-    const double* arg[2*sz_arg];
-    double* res[6*sz_res];
-    casadi_int iw[sz_iw];
-    double w[sz_w];
-
-    // Set input values
-    double input_pos[sz_arg];
-    double input_vel[sz_arg];
-    for (casadi_int i = 0; i < sz_arg; ++i) {
-        input_pos[i] = _q(i);
-        input_vel[i] = _dq(i);
-        arg[2*i] = &input_pos[i];
-        arg[2*i+1] = &input_vel[i];
-    }
-
-    // Set output buffers
-    double output_values[6*sz_res]; // 6x6 matrix
-    for (casadi_int i = 0; i < sz_res; ++i) {
-        res[i] = &output_values[i];
-    }
-
-    // Evaluate the function
-    int mem = 0;  // No thread-local memory management
-    
-    if (dJ_b_eval(arg, res, iw, w, mem)) {
-        throw std::runtime_error("Function evaluation failed.\n");
-    }
-
-    for (casadi_int i = 0; i < sz_res; ++i) {
-        for (casadi_int j = 0; j < 6; ++j) {   
-            dJ_b(j,i) = output_values[i * 6 + j];
-        }
-    }
+    dJ_b = dJacobianBody(T_M, Blist, _q, _dq);
 
     return dJ_b;
 }
@@ -1177,6 +1154,10 @@ MM_Jacobian CS_hyumm::getJdot_s()
 {
     return dJ_s;
 }
+Twist CS_hyumm::getBodyTwist()
+{
+    return V_b;
+}
 
 
 MM_JVec CS_hyumm::FrictionEstimation(MM_JVec dq)
@@ -1253,6 +1234,33 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
     }
     // tau = K.cwiseProduct(tau);
     return tau;   
+}
+
+MM_JVec CS_hyumm::TaskRobustControl(MM_JVec q, MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_int += lambda * period;
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    Twist lambda_dot_ref = Task_Kv * lambda + Task_Kp * lambda_int;
+    Twist lambda_ddot_ref = Task_Kv * lambda_dot + Task_Kp * lambda;
+
+    Twist V_ref = Ad(T_err) * (V_des + dexp6(-lambda) * (lambda_dot_ref));
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_dot - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
+    MM_JVec q_dot_ref = invJb * V_ref;
+    MM_JVec edot = q_dot_ref - q_dot;
+    MM_JVec tau_ref = Task_K * edot;
+    
+    MM_JVec torques = M * qddot_ref + C * q_dot_ref + G + tau_ref;
+
+    return torques;
 }
 
 void CS_hyumm::saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES)

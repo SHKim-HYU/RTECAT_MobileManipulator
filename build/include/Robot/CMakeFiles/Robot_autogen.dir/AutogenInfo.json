@@ -26,6 +26,11 @@
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h",
 			"MU",
 			"EWIEGA46WW/moc_PropertyDefinition.cpp"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h",
+			"MU",
+			"EWIEGA46WW/moc_liegroup_robotics.cpp"
 		]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
@@ -94,6 +99,10 @@
 		],
 		[
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp",
+			"MU"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.cpp",
 			"MU"
 		]
 	],

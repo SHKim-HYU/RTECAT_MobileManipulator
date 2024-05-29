@@ -31,13 +31,13 @@
 #define TORQUE_ADC_100 96 // Torque ADC for Core 100 [NRMK]
 
 // Indy7
-// SN: DD11I7ED001 [Indy7]
-#define ZERO_POS_1 20902
-#define ZERO_POS_2 28201
-#define ZERO_POS_3 292649
-#define ZERO_POS_4 61158
-#define ZERO_POS_5 2180
-#define ZERO_POS_6 31587
+// SN: P11828I07003 [Indy7]
+#define ZERO_POS_1 48364
+#define ZERO_POS_2 5992
+#define ZERO_POS_3 -28718
+#define ZERO_POS_4 4754
+#define ZERO_POS_5 29969
+#define ZERO_POS_6 -3031
 
 #define F_c 20.123, 12.287, 4.5622, 3.1492, 3.4757, 3.4986
 #define F_v1 111.32, 70.081, 25.337, 13.131, 8.5082, 9.9523
@@ -91,7 +91,7 @@
 #define BASE_l 0.41 // [m]
 #define BASE_w 0.31 // [m]
 
-#define EFFICIENCY 75.0 // Gear efficiency
+#define EFFICIENCY 85.0 // Gear efficiency
 
 // Tool Information [Tip]
 #define Ixx 0.00012118
@@ -100,7 +100,7 @@
 #define X_com 0.0
 #define Y_com 0.0
 #define Z_com 0.0355073
-#define mass_tool 0.06
+#define mass_tool 0.025
 // Tool Information [FT Sensor]
 #define mass_FT 0.02
 
@@ -125,8 +125,9 @@
 // 4. Type Definition
 typedef Eigen::Matrix<double, 4, 4> SE3;
 typedef Eigen::Matrix<double, 3, 3> SO3;
-typedef Eigen::Matrix<double, 6, 1> se3;
+typedef Eigen::Matrix<double, 4, 4> se3;
 typedef Eigen::Matrix<double, 3, 3> so3;
+typedef Eigen::Matrix<double, 6, 1> Twist;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;   
 typedef Eigen::Matrix<float, 6, 1> Vector6f;  
 typedef Eigen::Matrix<double, 3, 1> Vector3d;   

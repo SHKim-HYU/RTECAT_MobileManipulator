@@ -213,6 +213,33 @@ Interpolator_autogen/mocs_compilation.cpp.s:
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Interpolator/CMakeFiles/Interpolator.dir/build.make include/Interpolator/CMakeFiles/Interpolator.dir/Interpolator_autogen/mocs_compilation.cpp.s
 .PHONY : Interpolator_autogen/mocs_compilation.cpp.s
 
+TaskTrajectory.o: TaskTrajectory.cpp.o
+
+.PHONY : TaskTrajectory.o
+
+# target to build an object file
+TaskTrajectory.cpp.o:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Interpolator/CMakeFiles/Interpolator.dir/build.make include/Interpolator/CMakeFiles/Interpolator.dir/TaskTrajectory.cpp.o
+.PHONY : TaskTrajectory.cpp.o
+
+TaskTrajectory.i: TaskTrajectory.cpp.i
+
+.PHONY : TaskTrajectory.i
+
+# target to preprocess a source file
+TaskTrajectory.cpp.i:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Interpolator/CMakeFiles/Interpolator.dir/build.make include/Interpolator/CMakeFiles/Interpolator.dir/TaskTrajectory.cpp.i
+.PHONY : TaskTrajectory.cpp.i
+
+TaskTrajectory.s: TaskTrajectory.cpp.s
+
+.PHONY : TaskTrajectory.s
+
+# target to generate assembly for a file
+TaskTrajectory.cpp.s:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Interpolator/CMakeFiles/Interpolator.dir/build.make include/Interpolator/CMakeFiles/Interpolator.dir/TaskTrajectory.cpp.s
+.PHONY : TaskTrajectory.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -230,6 +257,9 @@ help:
 	@echo "... Interpolator_autogen/mocs_compilation.o"
 	@echo "... Interpolator_autogen/mocs_compilation.i"
 	@echo "... Interpolator_autogen/mocs_compilation.s"
+	@echo "... TaskTrajectory.o"
+	@echo "... TaskTrajectory.i"
+	@echo "... TaskTrajectory.s"
 .PHONY : help
 
 

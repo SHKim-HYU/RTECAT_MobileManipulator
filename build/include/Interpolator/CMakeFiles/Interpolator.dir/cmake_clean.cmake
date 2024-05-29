@@ -3,6 +3,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/Interpolator_autogen.dir/ParseCache.txt"
   "Interpolator_autogen"
   "CMakeFiles/Interpolator.dir/Interpolator_autogen/mocs_compilation.cpp.o"
+  "CMakeFiles/Interpolator.dir/TaskTrajectory.cpp.o"
   "libInterpolator.a"
   "libInterpolator.pdb"
 )

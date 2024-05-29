@@ -21,6 +21,11 @@
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator/PolynomialAlgorithm.h",
 			"MU",
 			"EWIEGA46WW/moc_PolynomialAlgorithm.cpp"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator/TaskTrajectory.h",
+			"MU",
+			"EWIEGA46WW/moc_TaskTrajectory.cpp"
 		]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
@@ -44,6 +49,7 @@
 		"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot",
 		"/home/robot/robot_ws/RTECAT_MobileManipulator/include/QtWidgets",
 		"/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow",
+		"/usr/include/eigen3",
 		"/usr/include/c++/9",
 		"/usr/include/x86_64-linux-gnu/c++/9",
 		"/usr/include/c++/9/backward",
@@ -73,7 +79,13 @@
 	"QT_UIC_EXECUTABLE" : "/opt/Qt5.14.2/5.14.2/gcc_64/bin/uic",
 	"QT_VERSION_MAJOR" : 5,
 	"SETTINGS_FILE" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Interpolator/CMakeFiles/Interpolator_autogen.dir/AutogenUsed.txt",
-	"SOURCES" : [],
+	"SOURCES" : 
+	[
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator/TaskTrajectory.cpp",
+			"MU"
+		]
+	],
 	"UIC_OPTIONS" : [],
 	"UIC_SEARCH_PATHS" : [],
 	"UIC_SKIP" : [],

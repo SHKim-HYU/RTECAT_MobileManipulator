@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
-#include "LieOperator.h"
+#include "liegroup_robotics.h"
 #include "PropertyDefinition.h"
 
 typedef long long int casadi_int;
@@ -15,8 +15,9 @@ typedef int (*eval_t)(const double**, double**, casadi_int*, double*, int);
 
 using namespace Eigen;
 using namespace std;
+using namespace lr;
 
-class CS_Indy7 : public LieOperator {
+class CS_Indy7 {
 public:
 	CS_Indy7();
 	
@@ -44,7 +45,7 @@ public:
 	Arm_JVec computeFD(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau);
 	void computeRK45(Arm_JVec _q, Arm_JVec _dq, Arm_JVec _tau, Arm_JVec &_q_nom, Arm_JVec &_dq_nom, Arm_JVec &_ddq_nom);
 
-	se3 computeF_Tool(se3 _dx, se3 _ddx);
+	Twist computeF_Tool(Twist _dx, Twist _ddx);
 
 	Arm_MassMat computeM(Arm_JVec _q);
 	Arm_MassMat computeMinv(Arm_JVec _q);

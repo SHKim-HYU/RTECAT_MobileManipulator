@@ -42,6 +42,7 @@
 #include "ServoAxis_Motor.h"
 #include "ServoAxis_Core.h"
 #include <PropertyDefinition.h>
+#include <liegroup_robotics.h>
 
 #define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
 
@@ -51,9 +52,9 @@ double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second un
 
 
 
-double ft_offset[6] = {-31.70, 24.45, 56.50, -0.075, 0.335, 1.81};
+double ft_offset[6] = {27.15, -55.25, -49.9, -1.225, -0.038, 4.224};
 // double ft_offset[6] = {0.0,};
-se3 F_tmp;
+Twist F_tmp;
 
 // For RT thread management
 static int run = 1;
@@ -109,14 +110,6 @@ double traj_time=0;
 int motion=-1;
 
 // Controller Gains
-Arm_JVec NRIC_Kp;
-Arm_JVec NRIC_Ki;
-Arm_JVec NRIC_K_gamma;
-
-Arm_JVec Kp_n;
-Arm_JVec Kd_n;
-Arm_JVec Ki_n;
-
 MM_JVec NRIC_Kp_mm;
 MM_JVec NRIC_Ki_mm;
 MM_JVec NRIC_K_gamma_mm;
@@ -125,9 +118,14 @@ MM_JVec Kp_n_mm;
 MM_JVec Kd_n_mm;
 MM_JVec Ki_n_mm;
 
+Twist Task_Kp;
+Twist Task_Kv;
+MM_JVec Task_K;
+
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;
 Mob_Jacobian J_mob;
+
 
 
 #endif  // /* RTECAT_MOBILEMANIPULATOR_CLIENT_H */

@@ -338,8 +338,9 @@ void Master::activate()
     }
 }
 
-void Master::activateWithDC(uint8_t RefPosition, uint32_t SyncCycleNano)
+void Master::activateWithDC(uint8_t RefPosition, uint32_t _SyncCycleNano)
 {
+    SyncCycleNano = _SyncCycleNano;
     // register domain
     for (auto& iter : m_domain_info){
         DomainInfo* domain_info = iter.second;
@@ -386,7 +387,11 @@ void Master::activateWithDC(uint8_t RefPosition, uint32_t SyncCycleNano)
 
 void Master::SyncEcatMaster(uint64_t RefTime)
 {
+    uint32_t master_time, slave_time;
 	ecrt_master_application_time(p_master, RefTime);
+    // ecrt_master_64bit_reference_clock_time_queue(p_master);
+    ecrt_master_reference_clock_time(p_master, &master_time);
+
 	ecrt_master_sync_reference_clock(p_master);
 	ecrt_master_sync_slave_clocks(p_master);
 }

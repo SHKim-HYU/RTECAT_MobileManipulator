@@ -25,14 +25,14 @@ public:
 	Matrix3d SkewMatrixSquare( Vector3d _Vec3 );
 	Matrix6d AdjointMatrix( SE3 _SE3 );
 	Matrix6d AdjointDualMatrix( SE3 _SE3 );
-	Matrix6d adjointMatrix( se3 _se3 );
-	Matrix6d adjointDualMatrix( se3 _se3 );
+	Matrix6d adjointMatrix( Twist _Twist );
+	Matrix6d adjointDualMatrix( Twist _Twist );
 	Matrix3d MatrixLog3(Matrix3d& R);
 	Vector3d so3ToVec(Matrix3d& so3mat);
 
-	SE3 SE3Matrix(se3 _Twist, double _q);
-//	Matrix<double, 7, 1> AxisAng6(se3 expc6);
-//	Matrix4d MatrixExp6(se3 _s, double _q);
+	SE3 SE3Matrix(Twist _Twist, double _q);
+//	Matrix<double, 7, 1> AxisAng6(Twist expc6);
+//	Matrix4d MatrixExp6(Twist _s, double _q);
 private:
 
 

@@ -8,6 +8,8 @@
 #ifndef ECATSYSTEM_ECAT_MASTER_H_
 #define ECATSYSTEM_ECAT_MASTER_H_
 
+#define ALLOWED_TIME_DIFFERENCE 1000 // 1us
+
 #include "ecrt.h"
 #include <string>
 #include <vector>
@@ -98,6 +100,7 @@ private:
      *  state checked every frequency_ control loops */
     unsigned int check_state_frequency_ = 100;
 	int num_slaves = 0;
+	uint32_t SyncCycleNano;
 
 };
 
