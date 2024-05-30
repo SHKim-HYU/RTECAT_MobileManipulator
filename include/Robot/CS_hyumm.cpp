@@ -29,6 +29,7 @@ CS_hyumm::CS_hyumm()
 
     Task_Kp = Matrix6d::Zero();
     Task_Kv = Matrix6d::Zero();
+    Task_Ki = Matrix6d::Zero();
     Task_K = MM_JMat::Zero();
 
     Hinf_Kp = MM_JMat::Zero();
@@ -452,10 +453,11 @@ void CS_hyumm::setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_g
     NRIC_K_gamma = _NRIC_K_gamma.asDiagonal();
 }
 
-void CS_hyumm::setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K)
+void CS_hyumm::setTaskgain(Twist _Kp, Twist _Kv, Twist _Ki, MM_JVec _K)
 {
     Task_Kp = _Kp.asDiagonal();
     Task_Kv = _Kv.asDiagonal();
+    Task_Ki = _Ki.asDiagonal();
     Task_K = _K.asDiagonal();
 }
 
@@ -1236,7 +1238,28 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
     return tau;   
 }
 
-MM_JVec CS_hyumm::TaskRobustControl(MM_JVec q, MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des)
+MM_JVec CS_hyumm::TaskInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    Twist lambda_ddot_ref = Task_Kv * lambda_dot + Task_Kp * lambda;
+
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    
+    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
+    MM_JVec torques = M * qddot_ref + C * q_dot + G;
+
+    return torques;
+}
+
+MM_JVec CS_hyumm::TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des)
 {
     SE3 T_err = TransInv(T_ee)*T_des;
     SE3 invT_err = TransInv(T_err);
@@ -1245,20 +1268,72 @@ MM_JVec CS_hyumm::TaskRobustControl(MM_JVec q, MM_JVec q_dot, SE3 T_des, Twist V
     
     lambda = se3ToVec(MatrixLog6(T_err));
     lambda_int += lambda * period;
+
     lambda_dot = dlog6(-lambda) * V_err;
 
     Twist lambda_dot_ref = Task_Kv * lambda + Task_Kp * lambda_int;
     Twist lambda_ddot_ref = Task_Kv * lambda_dot + Task_Kp * lambda;
 
     Twist V_ref = Ad(T_err) * (V_des + dexp6(-lambda) * (lambda_dot_ref));
-    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_dot - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    
     MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
-    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
     MM_JVec q_dot_ref = invJb * V_ref;
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot_ref);
     MM_JVec edot = q_dot_ref - q_dot;
     MM_JVec tau_ref = Task_K * edot;
     
     MM_JVec torques = M * qddot_ref + C * q_dot_ref + G + tau_ref;
+
+    return torques;
+}
+
+MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    Twist lambda_ddot_ref = Task_Kv * lambda_dot + Task_Kp * lambda;
+
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+
+    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+
+    MM_JVec sellect_joint;
+    sellect_joint << 1,1,1,0,0,0,0,0,0;
+
+    JacobiSVD<MM_Jacobian> svd(J_b, ComputeThinU | ComputeThinV);
+    MM_JMat V = svd.matrixV();
+    Matrix<double, MOBILE_DOF_NUM, MM_DOF_NUM> Z, Z_dot;
+    Matrix<double, MM_DOF_NUM, MOBILE_DOF_NUM> invZ, invZ_dot;
+    MM_JMat Wdiag = MM_JMat::Zero();
+
+    Z = V.block<MOBILE_DOF_NUM,MM_DOF_NUM>(3,0);
+    invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    
+
+    // Method 1
+    Z = Minv.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * Z;
+    invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    MM_JMat W = M * sellect_joint.asDiagonal() + J_b.transpose()*J_b;
+
+    // // Method 2
+    // Wdiag.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0);
+    // MM_JMat W = Wdiag + J_b.transpose()*J_b;
+    
+
+    Z_dot = (-invJb * dJ_b * Z.transpose()).transpose();
+    invZ_dot = -invZ * Z_dot * invZ;
+
+    MM_JMat W_dot = invZ_dot.block<3,3>(0,0) + dJ_b.transpose()*J_b + J_b.transpose()*dJ_b;
+    
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
+    MM_JVec torques = M * qddot_ref + C * q_dot + G;
 
     return torques;
 }

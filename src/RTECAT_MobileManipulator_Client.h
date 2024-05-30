@@ -120,6 +120,7 @@ MM_JVec Ki_n_mm;
 
 Twist Task_Kp;
 Twist Task_Kv;
+Twist Task_Ki;
 MM_JVec Task_K;
 
 // Mobile Jacobian

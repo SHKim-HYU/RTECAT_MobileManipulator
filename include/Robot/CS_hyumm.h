@@ -39,7 +39,7 @@ public:
 	void setPIDgain(MM_JVec _Kp, MM_JVec _Kd, MM_JVec _Ki);
 	void setHinfgain(MM_JVec _Hinf_Kp, MM_JVec _Hinf_Kd, MM_JVec _Hinf_Ki, MM_JVec _Hinf_K_gamma);
 	void setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_gamma);
-	void setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K);
+	void setTaskgain(Twist _Kp, Twist _Kv, Twist _Ki, MM_JVec _K);
 
 	void updateRobot(MM_JVec _q, MM_JVec _dq);
 
@@ -85,7 +85,9 @@ public:
 
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
-	MM_JVec TaskRobustControl(MM_JVec q, MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskRedundantIDC(MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des);
     void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
     
     MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
@@ -156,6 +158,7 @@ private:
 	// casadi::Function fd_cs, M_cs, Minv_cs, C_cs, G_cs, J_s_cs, J_b_cs, FK_cs;
 	Matrix6d Task_Kp;
 	Matrix6d Task_Kv;
+	Matrix6d Task_Ki;
 	MM_JMat Task_K;
 
 	MM_JMat M_imp;
