@@ -100,7 +100,7 @@
 #define X_com 0.0
 #define Y_com 0.0
 #define Z_com 0.0355073
-#define mass_tool 0.025
+#define mass_tool 0.06
 // Tool Information [FT Sensor]
 #define mass_FT 0.02
 

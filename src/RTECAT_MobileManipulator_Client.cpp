@@ -223,31 +223,71 @@ void trajectory_generation(){
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-0.707; info_mm.q_target(8)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=-1.5709;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=0.0;
-	    	traj_time = 3;
-	    	motion++;
-			// motion=1;
-	        break;
-	    case 2:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
 	    	traj_time = 3;
+			modeControl =1;
+	    	// motion++;
+			motion=1;
+	        break;
+	    case 2:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.3; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;;
+			modeControl = 2;
 	    	motion++;
 			// motion=1;
 	        break;
 	    case 3:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.3; info_mm.q_target(2)=0.0;
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
 			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
-	    	traj_time = 3;
-	    	// motion++;
+	    	traj_time = 10;;
+	    	motion++;
 	        break;
 	    case 4:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=-0.3; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;;
+			motion++;
+	    	break;
+		case 5:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 3;
-			motion=1;
+	    	traj_time = 10;;
+			motion++;
+	    	break;
+		case 6:
+			info_mm.q_target(0)=0.15; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;;
+	    	motion++;
+			// motion=1;
+	        break;
+	    case 7:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
+			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
+	    	traj_time = 10;;
+	    	motion++;
+	        break;
+	    case 8:
+			info_mm.q_target(0)=-0.2; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;;
+			motion++;
+	    	break;
+		case 9:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;;
+			motion=2;
 	    	break;
 
 		default:
@@ -328,30 +368,31 @@ void control()
 	info_mob.des.q_dot = info_mob.des.tau;
 
 	
-	if(motion==2)
-	{
+	// if(modeControl==1)
+	// {
 		// [Joint Space Nominal Controller]
 		info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
     	// info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.act.tau_ext);
-	}
-	else if(motion==3)
-	{
-		// [Task Space Nominal Controller]
-		SE3 T_des;
-		Twist V_des, V_dot_des;
-		T_des << -0.9848,	0,		0.17365,		0.649917,
-				  0,		1,		0,		-0.1765,
-				  -0.17365,		0,		-0.9848,0.579464,
-				  0,	0,		0,		1;
-		// T_des << -1,	0,		0,		0.649917,
-		// 		  0,	1,		0,		-0.1765,
-		// 		  0,	0,		-1,		0.579464,
-		// 		  0,	0,		0,		1;
-		V_des = Twist::Zero();
-		V_dot_des = Twist::Zero();
-		info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, T_des, V_des, V_dot_des);
+	// }
+	// else if(modeControl==2)
+	// {
+	// 	// [Task Space Nominal Controller]
+	// 	SE3 T_des;
+	// 	Twist V_des, V_dot_des;
+	// 	// T_des << -0.9848,	0,		0.17365,		0.649917,
+	// 	// 		  0,		1,		0,		-0.1765,
+	// 	// 		  -0.17365,		0,		-0.9848,0.579464,
+	// 	// 		  0,	0,		0,		1;
+	// 	T_des << -1,	0,		0,		0.649917,
+	// 			  0,	1,		0,		-0.1765,
+	// 			  0,	0,		-1,		0.579464,
+	// 			  0,	0,		0,		1;
+	// 	V_des = Twist::Zero();
+	// 	V_dot_des = Twist::Zero();
+	// 	// info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, T_des, V_des, V_dot_des);
+	// 	info_mm.nom.tau = cs_nom_hyumm.TaskRedundantIDC(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, T_des, V_des, V_dot_des);
 		
-	}
+	// }
 
 	
 	// [NRIC]
@@ -542,46 +583,7 @@ void motor_run(void *arg)
 			gt+= period;
 			if (periodCycle > cycle_ns) overruns++;
 			if (periodLoop > worstLoop) worstLoop = periodLoop;
-			rt_printf("Time=%0.3lfs, cycle_dt=%lius, worst_cycle=%lius, overrun=%d\n", gt, periodCycle/1000, worstLoop/1000, overruns);
-		// /*
-		rt_printf("Mobile Data\n");
-		rt_printf("Des_x: %lf, Des_y: %lf, Des_th: %lf\n", info_mm.des.q(0), info_mm.des.q(1), info_mm.des.q(2));
-		rt_printf("Act_x: %lf, Act_y: %lf, Act_th: %lf\n", info_mm.act.q(0), info_mm.act.q(1), info_mm.act.q(2));
-		rt_printf("Nom_x: %lf, Nom_y: %lf, Nom_th: %lf\n", info_mm.nom.q(0), info_mm.nom.q(1), info_mm.nom.q(2));
-		rt_printf("Des_Vx: %lf, Des_Vy: %lf, Des_Wz: %lf\n", info_mm.des.q_dot(0), info_mm.des.q_dot(1), info_mm.des.q_dot(2));
-		rt_printf("Act_Vx: %lf, Act_Vy: %lf, Act_Wz: %lf\n", info_mm.act.q_dot(0), info_mm.act.q_dot(1), info_mm.act.q_dot(2));
-		rt_printf("Nom_Vx: %lf, Nom_Vy: %lf, Nom_Wz: %lf\n", info_mm.nom.q_dot(0), info_mm.nom.q_dot(1), info_mm.nom.q_dot(2));
-		
-		// for(int j=0; j<MOBILE_DRIVE_NUM; ++j){
-		// 	rt_printf("ID: %d", j);
-		// 	rt_printf("\t DesPos: %lf, DesVel :%lf, DesAcc :%lf\n",info_mob.des.q[j],info_mob.des.q_dot[j],info_mob.des.q_ddot[j]);
-		// 	rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_mob.act.q(j), info_mob.act.q_dot(j));
-		// 	rt_printf("\t NomPos: %lf, NomVel: %lf, NomAcc :%lf\n",info_mm.nom.q(j), info_mm.nom.q_dot(j), info_mm.nom.q_ddot(j));
-		// 	rt_printf("\t TarTor: %lf, ActTor: %lf, ExtTor: %lf \n", info_mob.des.tau(j), info_mob.act.tau(j), info_mob.act.tau_ext(j));
-		// }
-		rt_printf("Arm Data\n");
-		for(int j=MOBILE_DOF_NUM; j<MM_DOF_NUM; ++j){
-			rt_printf("ID: %d", j+2);
-			rt_printf("\t DesPos: %lf, DesVel :%lf, DesAcc :%lf\n",info_mm.des.q[j],info_mm.des.q_dot[j],info_mm.des.q_ddot[j]);
-			rt_printf("\t ActPos: %lf, ActVel: %lf \n",info_mm.act.q(j), info_mm.act.q_dot(j));
-			rt_printf("\t NomPos: %lf, NomVel: %lf, NomAcc :%lf\n",info_mm.nom.q(j), info_mm.nom.q_dot(j), info_mm.nom.q_ddot(j));
-			rt_printf("\t TarTor: %lf, ActTor: %lf, NomTor: %lf, ExtTor: %lf \n", info_mm.des.tau(j), info_mm.act.tau(j), info_mm.nom.tau(j), info_mm.act.tau_ext(j));
 		}
-		// rt_printf("V: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_dot(0),info_mm.act.x_dot(1),info_mm.act.x_dot(2),info_mm.act.x_dot(3),info_mm.act.x_dot(4),info_mm.act.x_dot(5),info_mm.act.x_dot(6),info_mm.act.x_dot(7),info_mm.act.x_dot(8));
-		// rt_printf("dV: %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.x_ddot(0),info_mm.act.x_ddot(1),info_mm.act.x_ddot(2),info_mm.act.x_ddot(3),info_mm.act.x_ddot(4),info_mm.act.x_ddot(5),info_mm.act.x_ddot(6),info_mm.act.x_ddot(7),info_mm.act.x_ddot(8));
-		rt_printf("readFT: %lf, %lf, %lf, %lf, %lf, %lf\n", F_tmp(0),F_tmp(1),F_tmp(2),F_tmp(3),F_tmp(4),F_tmp(5));
-		rt_printf("resFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.F(0),info_mm.act.F(1),info_mm.act.F(2),info_mm.act.F(3),info_mm.act.F(4),info_mm.act.F(5));
-		rt_printf("tau_ext: %lf, %lf, %lf\n", info_mm.act.tau_ext(0), info_mm.act.tau_ext(1), info_mm.act.tau_ext(2));
-		rt_printf("T: \t%lf, %lf, %lf, %lf\n", info_mm.act.T(0,0), info_mm.act.T(0,1), info_mm.act.T(0,2), info_mm.act.T(0,3));
-		rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(1,0), info_mm.act.T(1,1), info_mm.act.T(1,2), info_mm.act.T(1,3));
-		rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(2,0), info_mm.act.T(2,1), info_mm.act.T(2,2), info_mm.act.T(2,3));
-		rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(3,0), info_mm.act.T(3,1), info_mm.act.T(3,2), info_mm.act.T(3,3));
-		rt_printf("\n");
-		// */
-		}
-
-		
-
 
         beginCyclebuf = beginCycle;
 		rt_task_wait_period(NULL); //wait for next cycle
@@ -669,13 +671,13 @@ void print_run(void *arg)
 
 			rt_printf("Time=%0.3lfs, cycle_dt=%lius, worst_cycle=%lius, overrun=%d\n", gt, periodCycle/1000, worstLoop/1000, overruns);
 			// /*
-            // rt_printf("Mobile Data\n");
-			// rt_printf("Des_x: %lf, Des_y: %lf, Des_th: %lf\n", info_mm.des.q(0), info_mm.des.q(1), info_mm.des.q(2));
-			// rt_printf("Act_x: %lf, Act_y: %lf, Act_th: %lf\n", info_mm.act.q(0), info_mm.act.q(1), info_mm.act.q(2));
-			// rt_printf("Nom_x: %lf, Nom_y: %lf, Nom_th: %lf\n", info_mm.nom.q(0), info_mm.nom.q(1), info_mm.nom.q(2));
-			// rt_printf("Des_Vx: %lf, Des_Vy: %lf, Des_Wz: %lf\n", info_mm.des.q_dot(0), info_mm.des.q_dot(1), info_mm.des.q_dot(2));
-			// rt_printf("Act_Vx: %lf, Act_Vy: %lf, Act_Wz: %lf\n", info_mm.act.q_dot(0), info_mm.act.q_dot(1), info_mm.act.q_dot(2));
-			// rt_printf("Nom_Vx: %lf, Nom_Vy: %lf, Nom_Wz: %lf\n", info_mm.nom.q_dot(0), info_mm.nom.q_dot(1), info_mm.nom.q_dot(2));
+            rt_printf("Mobile Data\n");
+			rt_printf("Des_x: %lf, Des_y: %lf, Des_th: %lf\n", info_mm.des.q(0), info_mm.des.q(1), info_mm.des.q(2));
+			rt_printf("Act_x: %lf, Act_y: %lf, Act_th: %lf\n", info_mm.act.q(0), info_mm.act.q(1), info_mm.act.q(2));
+			rt_printf("Nom_x: %lf, Nom_y: %lf, Nom_th: %lf\n", info_mm.nom.q(0), info_mm.nom.q(1), info_mm.nom.q(2));
+			rt_printf("Des_Vx: %lf, Des_Vy: %lf, Des_Wz: %lf\n", info_mm.des.q_dot(0), info_mm.des.q_dot(1), info_mm.des.q_dot(2));
+			rt_printf("Act_Vx: %lf, Act_Vy: %lf, Act_Wz: %lf\n", info_mm.act.q_dot(0), info_mm.act.q_dot(1), info_mm.act.q_dot(2));
+			rt_printf("Nom_Vx: %lf, Nom_Vy: %lf, Nom_Wz: %lf\n", info_mm.nom.q_dot(0), info_mm.nom.q_dot(1), info_mm.nom.q_dot(2));
 			
 			// for(int j=0; j<MOBILE_DRIVE_NUM; ++j){
 			// 	rt_printf("ID: %d", j);
@@ -782,7 +784,7 @@ int main(int argc, char *argv[])
 
     rt_task_create(&print_task, "print_task", 0, 70, 0);
     rt_task_set_affinity(&print_task, &cpuset_rt1);
-    // rt_task_start(&print_task, &print_run, NULL);
+    rt_task_start(&print_task, &print_run, NULL);
 
     // Must pause here
     pause();

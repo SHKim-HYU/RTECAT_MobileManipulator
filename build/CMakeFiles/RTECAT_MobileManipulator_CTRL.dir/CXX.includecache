@@ -133,6 +133,8 @@ Eigen/Dense
 -
 dlfcn.h
 -
+lapacke.h
+-
 liegroup_robotics.h
 ../include/Robot/liegroup_robotics.h
 PropertyDefinition.h

@@ -6,6 +6,24 @@
 
 #IncludeRegexTransform: 
 
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.cpp
+CS_Indy7.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.h
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_Indy7.h
+iostream
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/iostream
+json_loader.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/json_loader.h
+Eigen/Dense
+-
+dlfcn.h
+-
+liegroup_robotics.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
+PropertyDefinition.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
+
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.cpp
 CS_hyumm.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.h
@@ -19,8 +37,20 @@ Eigen/Dense
 -
 dlfcn.h
 -
+lapacke.h
+-
 liegroup_robotics.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
+PropertyDefinition.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp
+LieOperator.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.h
+Eigen/Dense
+-
 PropertyDefinition.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/PropertyDefinition.h
 
@@ -35,6 +65,10 @@ fstream
 -
 json/json.h
 -
+
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.cpp
+liegroup_robotics.h
+/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
 
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h
 iostream

@@ -16,7 +16,12 @@ target_include_directories(${PROJECT_NAME}
 
 # Eigen3
 find_package(Eigen3 3.0 REQUIRED NO_MODULE)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen ${LAPACK_LIBRARIES})
+
+# LAPACK
+find_package(LAPACK REQUIRED)
+target_link_libraries(${PROJECT_NAME} ${LAPACK_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${LAPACK_INCLUDE_DIRS})
 
 # jsoncpp
 find_package(jsoncpp REQUIRED)

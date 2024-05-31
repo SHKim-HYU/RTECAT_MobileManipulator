@@ -2,6 +2,366 @@
 	"entries" : 
 	[
 		{
+			"name" : "BLAS_Accelerate_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_Accelerate_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_WORKS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function sgemm_"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "BLAS_acml_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_acml_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_acml_mp_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_acml_mp_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_blas_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/usr/lib/x86_64-linux-gnu/libblas.so"
+		},
+		{
+			"name" : "BLAS_blas_WORKS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function sgemm_"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "BLAS_blis_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_blis_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_complib.sgimath_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_complib.sgimath_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_cxml_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_cxml_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_dxml_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_dxml_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_essl_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_essl_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_f77blas_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_f77blas_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_goto2_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_goto2_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_mkl_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_mkl_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_mkl_em64t_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_mkl_em64t_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_mkl_ia32_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_mkl_ia32_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_mkl_intel_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_mkl_intel_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_mkl_intel_lp64_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_mkl_intel_lp64_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_openblas_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_openblas_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_scsl_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_scsl_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_sgemm_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_sgemm_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_sunperf_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_sunperf_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "BLAS_vecLib_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BLAS_vecLib_LIBRARY-NOTFOUND"
+		},
+		{
 			"name" : "CASADI_INCLUDE_DIR",
 			"properties" : 
 			[
@@ -608,6 +968,54 @@
 			],
 			"type" : "INTERNAL",
 			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_LIBC_PTHREAD",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test CMAKE_HAVE_LIBC_PTHREAD"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREADS_CREATE",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have library pthreads"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREAD_CREATE",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have library pthread"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREAD_H",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include pthread.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
 		},
 		{
 			"name" : "CMAKE_HOME_DIRECTORY",
@@ -1626,6 +2034,18 @@
 			"value" : "/opt/etherlab/lib/libethercat_rtdm.a"
 		},
 		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_BLAS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding BLAS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/usr/lib/x86_64-linux-gnu/libblas.so][v()]"
+		},
+		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig",
 			"properties" : 
 			[
@@ -1636,6 +2056,18 @@
 			],
 			"type" : "INTERNAL",
 			"value" : "[/usr/bin/pkg-config][v0.29.1()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Threads",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding Threads"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[TRUE][v()]"
 		},
 		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Xenomai",
@@ -1712,6 +2144,142 @@
 			],
 			"type" : "PATH",
 			"value" : "/usr/src/linux-headers-5.4.239-xenomai-3.2.3+/include;/usr/src/linux-headers-5.4.239-xenomai-3.2.3+/arch/x86/include"
+		},
+		{
+			"name" : "LAPACK_Accelerate_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_Accelerate_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "LAPACK_WORKS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function cheev_"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "LAPACK_flame_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_flame_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "LAPACK_goto2_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_goto2_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "LAPACK_lapack_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/usr/lib/x86_64-linux-gnu/liblapack.so"
+		},
+		{
+			"name" : "LAPACK_lapack_WORKS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function cheev_"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "LAPACK_mkl_lapack_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_mkl_lapack_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "LAPACK_openblas_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_openblas_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "LAPACK_vecLib_LIBRARY",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LAPACK_vecLib_LIBRARY-NOTFOUND"
 		},
 		{
 			"name" : "PKG_CONFIG_EXECUTABLE",
@@ -2131,7 +2699,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "general;jsoncpp_lib;optimized;/usr/lib/x86_64-linux-gnu/libPocoFoundation.so;debug;/usr/lib/x86_64-linux-gnu/libPocoFoundation.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoUtil.so;debug;/usr/lib/x86_64-linux-gnu/libPocoUtil.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoZip.so;debug;/usr/lib/x86_64-linux-gnu/libPocoZip.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoNet.so;debug;/usr/lib/x86_64-linux-gnu/libPocoNet.so;general;/opt/casadi/lib/libcasadi.so;general;dl;"
+			"value" : "general;/usr/lib/x86_64-linux-gnu/liblapack.so;general;/usr/lib/x86_64-linux-gnu/libblas.so;general;jsoncpp_lib;optimized;/usr/lib/x86_64-linux-gnu/libPocoFoundation.so;debug;/usr/lib/x86_64-linux-gnu/libPocoFoundation.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoUtil.so;debug;/usr/lib/x86_64-linux-gnu/libPocoUtil.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoZip.so;debug;/usr/lib/x86_64-linux-gnu/libPocoZip.so;optimized;/usr/lib/x86_64-linux-gnu/libPocoNet.so;debug;/usr/lib/x86_64-linux-gnu/libPocoNet.so;general;/opt/casadi/lib/libcasadi.so;general;dl;"
 		},
 		{
 			"name" : "Robot_SOURCE_DIR",

@@ -139,6 +139,8 @@ include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/CS_hyumm.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/build.make
+include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/liblapack.so
+include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libblas.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libjsoncpp.so.1.7.4
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoFoundation.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoUtil.so

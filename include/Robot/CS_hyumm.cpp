@@ -1288,7 +1288,7 @@ MM_JVec CS_hyumm::TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, 
     return torques;
 }
 
-MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des)
+MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des)
 {
     SE3 T_err = TransInv(T_ee)*T_des;
     SE3 invT_err = TransInv(T_err);
@@ -1302,37 +1302,50 @@ MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM
 
     Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
 
-    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+    MM_pinvJacobian invJb, invJw;
+    invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
 
-    MM_JVec sellect_joint;
-    sellect_joint << 1,1,1,0,0,0,0,0,0;
+    MM_JVec jointMatrix;
+    jointMatrix << 1,1,1,0,0,0,0,0,0;
 
-    JacobiSVD<MM_Jacobian> svd(J_b, ComputeThinU | ComputeThinV);
-    MM_JMat V = svd.matrixV();
-    Matrix<double, MOBILE_DOF_NUM, MM_DOF_NUM> Z, Z_dot;
-    Matrix<double, MM_DOF_NUM, MOBILE_DOF_NUM> invZ, invZ_dot;
+    JacobiSVD<MM_Jacobian, ColPivHouseholderQRPreconditioner> svd(J_b, ComputeFullV);
+    MM_JMat V = svd.matrixV().transpose();
+
+    Matrix<double, MOBILE_DOF_NUM, MM_DOF_NUM> Z, Z_dot, ZW;
+    Matrix<double, MM_DOF_NUM, MOBILE_DOF_NUM> invZ, invZ_dot, invZw;
+    Matrix3d Zn, invZn;
+    Vector3d Zw_dot_ref;
+    MM_JMat W, W_dot, invW;
     MM_JMat Wdiag = MM_JMat::Zero();
+    W_dot = MM_JMat::Zero();
 
-    Z = V.block<MOBILE_DOF_NUM,MM_DOF_NUM>(3,0);
+    Z = V.block<MOBILE_DOF_NUM,MM_DOF_NUM>(6,0);
+  
     invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    Zn = Z.block<MOBILE_DOF_NUM, MOBILE_DOF_NUM>(0,0);
+    invZn = Zn.inverse();
+
+    // Method 1 M scale
+    // Z = Minv.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * Z;
+    // invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    // W = M * jointMatrix.asDiagonal() + J_b.transpose()*J_b;
+
+    // // Method 2 ZZ
+    Wdiag.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZn;
+    W = Wdiag + J_b.transpose()*J_b;
     
-
-    // Method 1
-    Z = Minv.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * Z;
-    invZ = Z.transpose() * (Z*Z.transpose()).inverse();
-    MM_JMat W = M * sellect_joint.asDiagonal() + J_b.transpose()*J_b;
-
-    // // Method 2
-    // Wdiag.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0);
-    // MM_JMat W = Wdiag + J_b.transpose()*J_b;
-    
-
     Z_dot = (-invJb * dJ_b * Z.transpose()).transpose();
     invZ_dot = -invZ * Z_dot * invZ;
-
-    MM_JMat W_dot = invZ_dot.block<3,3>(0,0) + dJ_b.transpose()*J_b + J_b.transpose()*dJ_b;
     
-    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
+    invW = W.transpose() * (W*W.transpose()).inverse();
+    W_dot.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZ_dot.block<3,3>(0,0);
+    W_dot += dJ_b.transpose()*J_b + J_b.transpose()*dJ_b;
+
+    invJw = invW * J_b.transpose() * (J_b * invW * J_b.transpose()).inverse();
+    invZw = Z.transpose() * (Z * W * Z.transpose()).inverse();
+
+    Zw_dot_ref = dq_ddot.head<3>() + 1*(dq.head<3>()-q.head<3>()) + 0.1*(dq_dot.head<3>() - q_dot.head<3>());
+    MM_JVec qddot_ref = invJw * (V_dot_ref - dJ_b * q_dot) + invZw* (Zw_dot_ref - (Z_dot*W+Z*W_dot)*q_dot);
     MM_JVec torques = M * qddot_ref + C * q_dot + G;
 
     return torques;

@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
+#include <lapacke.h>
 #include "liegroup_robotics.h"
 #include "PropertyDefinition.h"
 
@@ -87,7 +88,7 @@ public:
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
 	MM_JVec TaskInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
 	MM_JVec TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
-	MM_JVec TaskRedundantIDC(MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des);
     void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
     
     MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);

@@ -52,7 +52,7 @@ double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second un
 
 
 
-double ft_offset[6] = {27.15, -55.25, -49.9, -1.225, -0.038, 4.224};
+double ft_offset[6] = {30.1, -54.8, -45.4, -1.28, -0.233, 4.295};
 // double ft_offset[6] = {0.0,};
 Twist F_tmp;
 
@@ -108,6 +108,7 @@ double gt=0;
 // Trajectory parameers
 double traj_time=0;
 int motion=-1;
+int modeControl = 0;
 
 // Controller Gains
 MM_JVec NRIC_Kp_mm;

@@ -389,6 +389,14 @@
 				"role" : "libraries"
 			},
 			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/liblapack.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libblas.so",
+				"role" : "libraries"
+			},
+			{
 				"backtrace" : 3,
 				"fragment" : "/usr/lib/x86_64-linux-gnu/libjsoncpp.so.1.7.4",
 				"role" : "libraries"

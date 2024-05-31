@@ -118,6 +118,8 @@ RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/libjsoncpp.so.1.7.4
 RTECAT_MobileManipulator_CTRL: /opt/casadi/lib/libcasadi.so
 RTECAT_MobileManipulator_CTRL: /opt/etherlab/lib/libethercat.a
 RTECAT_MobileManipulator_CTRL: /opt/etherlab/lib/libethercat_rtdm.a
+RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/liblapack.so
+RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/libblas.so
 RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/libjsoncpp.so.1.7.4
 RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/libPocoFoundation.so
 RTECAT_MobileManipulator_CTRL: /usr/lib/x86_64-linux-gnu/libPocoUtil.so

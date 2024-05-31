@@ -35,13 +35,13 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 23,
+				"line" : 28,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 32,
+				"line" : 37,
 				"parent" : 0
 			},
 			{
@@ -62,7 +62,7 @@
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 37,
+				"line" : 42,
 				"parent" : 0
 			},
 			{
@@ -179,6 +179,14 @@
 			},
 			{
 				"fragment" : "-Wl,-rpath,/opt/casadi/lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/liblapack.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libblas.so",
 				"role" : "libraries"
 			},
 			{
