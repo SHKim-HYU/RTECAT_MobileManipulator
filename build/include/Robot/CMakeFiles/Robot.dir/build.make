@@ -109,9 +109,22 @@ include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Robot.dir/LieOperator.cpp.s"
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp -o CMakeFiles/Robot.dir/LieOperator.cpp.s
 
+include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o: include/Robot/CMakeFiles/Robot.dir/flags.make
+include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o: ../include/Robot/bullet_hyumm.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/robot/robot_ws/RTECAT_MobileManipulator/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o"
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && /usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Robot.dir/bullet_hyumm.cpp.o -c /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.cpp
+
+include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Robot.dir/bullet_hyumm.cpp.i"
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.cpp > CMakeFiles/Robot.dir/bullet_hyumm.cpp.i
+
+include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Robot.dir/bullet_hyumm.cpp.s"
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.cpp -o CMakeFiles/Robot.dir/bullet_hyumm.cpp.s
+
 include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o: include/Robot/CMakeFiles/Robot.dir/flags.make
 include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o: ../include/Robot/liegroup_robotics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/robot/robot_ws/RTECAT_MobileManipulator/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/robot/robot_ws/RTECAT_MobileManipulator/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && /usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Robot.dir/liegroup_robotics.cpp.o -c /home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.cpp
 
 include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.i: cmake_force
@@ -128,6 +141,7 @@ Robot_OBJECTS = \
 "CMakeFiles/Robot.dir/CS_Indy7.cpp.o" \
 "CMakeFiles/Robot.dir/CS_hyumm.cpp.o" \
 "CMakeFiles/Robot.dir/LieOperator.cpp.o" \
+"CMakeFiles/Robot.dir/bullet_hyumm.cpp.o" \
 "CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
 
 # External object files for target Robot
@@ -137,18 +151,31 @@ include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/Robot_autogen/mocs
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/CS_Indy7.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/CS_hyumm.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.o
+include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/build.make
-include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/liblapack.so
-include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libblas.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libjsoncpp.so.1.7.4
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoFoundation.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoUtil.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoZip.so
 include/Robot/libRobot.so: /usr/lib/x86_64-linux-gnu/libPocoNet.so
 include/Robot/libRobot.so: /opt/casadi/lib/libcasadi.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletDynamics.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletInverseDynamics.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletInverseDynamicsUtils.so
+include/Robot/libRobot.so: /usr/local/lib/libBullet3Common.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletCollision.so
+include/Robot/libRobot.so: /usr/local/lib/libLinearMath.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletSoftBody.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletExampleBrowserLib.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletRobotics.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletRoboticsGUI.so
+include/Robot/libRobot.so: /usr/local/lib/libOpenGLWindow.so
+include/Robot/libRobot.so: /usr/local/lib/libgwen.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletWorldImporter.so
+include/Robot/libRobot.so: /usr/local/lib/libBulletFileLoader.so
 include/Robot/libRobot.so: include/Robot/CMakeFiles/Robot.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/robot/robot_ws/RTECAT_MobileManipulator/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX shared library libRobot.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/robot/robot_ws/RTECAT_MobileManipulator/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared library libRobot.so"
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Robot.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

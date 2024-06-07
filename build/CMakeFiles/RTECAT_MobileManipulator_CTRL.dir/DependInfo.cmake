@@ -20,6 +20,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
   "QT_QML_LIB"
   "QT_QUICK_LIB"
   "QT_WIDGETS_LIB"
+  "__BULLET__"
   "__CASADI__"
   )
 
@@ -38,6 +39,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/usr/xenomai/include/cobalt"
   "/usr/xenomai/include"
   "/usr/xenomai/include/alchemy"
+  "/usr/local/include/bullet"
   "/opt/casadi/include"
   "/opt/casadi/include/casadi"
   "/opt/etherlab/include"

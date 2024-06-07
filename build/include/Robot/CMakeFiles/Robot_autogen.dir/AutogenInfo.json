@@ -28,6 +28,26 @@
 			"EWIEGA46WW/moc_PropertyDefinition.cpp"
 		],
 		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/ServoAxis_Core.h",
+			"MU",
+			"EWIEGA46WW/moc_ServoAxis_Core.cpp"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/ServoAxis_Motor.h",
+			"MU",
+			"EWIEGA46WW/moc_ServoAxis_Motor.cpp"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.h",
+			"MU",
+			"EWIEGA46WW/moc_bullet_hyumm.cpp"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/json_loader.h",
+			"MU",
+			"EWIEGA46WW/moc_json_loader.cpp"
+		],
+		[
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.h",
 			"MU",
 			"EWIEGA46WW/moc_liegroup_robotics.cpp"
@@ -36,7 +56,7 @@
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
 	"INCLUDE_DIR" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/Robot_autogen/include",
 	"MOC_COMPILATION_FILE" : "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/Robot_autogen/mocs_compilation.cpp",
-	"MOC_DEFINITIONS" : [ "Robot_EXPORTS", "__CASADI__" ],
+	"MOC_DEFINITIONS" : [ "Robot_EXPORTS", "__BULLET__", "__CASADI__" ],
 	"MOC_DEPEND_FILTERS" : 
 	[
 		[
@@ -56,6 +76,7 @@
 		"/home/robot/robot_ws/RTECAT_MobileManipulator/include/DarkStyleWindow",
 		"/opt/casadi/include",
 		"/opt/casadi/include/casadi",
+		"/usr/local/include/bullet",
 		"/usr/include/eigen3",
 		"/usr/include/jsoncpp",
 		"/usr/include",
@@ -99,6 +120,10 @@
 		],
 		[
 			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp",
+			"MU"
+		],
+		[
+			"/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.cpp",
 			"MU"
 		],
 		[

@@ -31,6 +31,7 @@
 		"QT_QML_LIB",
 		"QT_QUICK_LIB",
 		"QT_WIDGETS_LIB",
+		"__BULLET__",
 		"__CASADI__"
 	],
 	"MOC_DEPEND_FILTERS" : 
@@ -54,6 +55,7 @@
 		"/usr/xenomai/include/cobalt",
 		"/usr/xenomai/include",
 		"/usr/xenomai/include/alchemy",
+		"/usr/local/include/bullet",
 		"/opt/casadi/include",
 		"/opt/casadi/include/casadi",
 		"/opt/etherlab/include",

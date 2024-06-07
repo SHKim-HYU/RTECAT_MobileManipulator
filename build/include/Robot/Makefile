@@ -294,6 +294,33 @@ Robot_autogen/mocs_compilation.cpp.s:
 	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.s
 .PHONY : Robot_autogen/mocs_compilation.cpp.s
 
+bullet_hyumm.o: bullet_hyumm.cpp.o
+
+.PHONY : bullet_hyumm.o
+
+# target to build an object file
+bullet_hyumm.cpp.o:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o
+.PHONY : bullet_hyumm.cpp.o
+
+bullet_hyumm.i: bullet_hyumm.cpp.i
+
+.PHONY : bullet_hyumm.i
+
+# target to preprocess a source file
+bullet_hyumm.cpp.i:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.i
+.PHONY : bullet_hyumm.cpp.i
+
+bullet_hyumm.s: bullet_hyumm.cpp.s
+
+.PHONY : bullet_hyumm.s
+
+# target to generate assembly for a file
+bullet_hyumm.cpp.s:
+	cd /home/robot/robot_ws/RTECAT_MobileManipulator/build && $(MAKE) -f include/Robot/CMakeFiles/Robot.dir/build.make include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.s
+.PHONY : bullet_hyumm.cpp.s
+
 liegroup_robotics.o: liegroup_robotics.cpp.o
 
 .PHONY : liegroup_robotics.o
@@ -347,6 +374,9 @@ help:
 	@echo "... Robot_autogen/mocs_compilation.o"
 	@echo "... Robot_autogen/mocs_compilation.i"
 	@echo "... Robot_autogen/mocs_compilation.s"
+	@echo "... bullet_hyumm.o"
+	@echo "... bullet_hyumm.i"
+	@echo "... bullet_hyumm.s"
 	@echo "... liegroup_robotics.o"
 	@echo "... liegroup_robotics.i"
 	@echo "... liegroup_robotics.s"

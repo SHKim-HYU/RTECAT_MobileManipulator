@@ -8,12 +8,90 @@ CS_hyumm cs_nom_hyumm;
 
 RT_TASK safety_task;
 RT_TASK motor_task;
+RT_TASK bullet_task;
 RT_TASK print_task;
 RT_TASK xddp_writer;
 
 using namespace std;
 using namespace lr;
 
+
+inline double SIGN(double x) { 
+	return (x >= 0.0f) ? +1.0f : -1.0f; 
+}
+
+inline double NORM(double a, double b, double c, double d) { 
+	return sqrt(a * a + b * b + c * c + d * d); 
+}
+
+// quaternion = [w, x, y, z]'
+Vector4d mRot2Quat(const SO3& m) {
+	double r11 = m(0, 0);
+	double r12 = m(0, 1);
+	double r13 = m(0, 2);
+	double r21 = m(1, 0);
+	double r22 = m(1, 1);
+	double r23 = m(1, 2);
+	double r31 = m(2, 0);
+	double r32 = m(2, 1);
+	double r33 = m(2, 2);
+	double q0 = (r11 + r22 + r33 + 1.0f) / 4.0f;
+	double q1 = (r11 - r22 - r33 + 1.0f) / 4.0f;
+	double q2 = (-r11 + r22 - r33 + 1.0f) / 4.0f;
+	double q3 = (-r11 - r22 + r33 + 1.0f) / 4.0f;
+	if (q0 < 0.0f) {
+		q0 = 0.0f;
+	}
+	if (q1 < 0.0f) {
+		q1 = 0.0f;
+	}
+	if (q2 < 0.0f) {
+		q2 = 0.0f;
+	}
+	if (q3 < 0.0f) {
+		q3 = 0.0f;
+	}
+	q0 = sqrt(q0);
+	q1 = sqrt(q1);
+	q2 = sqrt(q2);
+	q3 = sqrt(q3);
+	if (q0 >= q1 && q0 >= q2 && q0 >= q3) {
+		q0 *= +1.0f;
+		q1 *= SIGN(r32 - r23);
+		q2 *= SIGN(r13 - r31);
+		q3 *= SIGN(r21 - r12);
+	}
+	else if (q1 >= q0 && q1 >= q2 && q1 >= q3) {
+		q0 *= SIGN(r32 - r23);
+		q1 *= +1.0f;
+		q2 *= SIGN(r21 + r12);
+		q3 *= SIGN(r13 + r31);
+	}
+	else if (q2 >= q0 && q2 >= q1 && q2 >= q3) {
+		q0 *= SIGN(r13 - r31);
+		q1 *= SIGN(r21 + r12);
+		q2 *= +1.0f;
+		q3 *= SIGN(r32 + r23);
+	}
+	else if (q3 >= q0 && q3 >= q1 && q3 >= q2) {
+		q0 *= SIGN(r21 - r12);
+		q1 *= SIGN(r31 + r13);
+		q2 *= SIGN(r32 + r23);
+		q3 *= +1.0f;
+	}
+	else {
+		printf("coding error\n");
+	}
+	double r = NORM(q0, q1, q2, q3);
+	q0 /= r;
+	q1 /= r;
+	q2 /= r;
+	q3 /= r;
+
+	Vector4d res;
+	res << q0, q1, q2, q3;
+	return res;
+}
 
 bool isSlaveInit()
 {
@@ -223,70 +301,79 @@ void trajectory_generation(){
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-0.707; info_mm.q_target(8)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=-1.5709;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+			// info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			// info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
 	    	traj_time = 3;
 			modeControl =1;
-	    	// motion++;
-			motion=1;
+	    	motion++;
+			// motion=1;
 	        break;
 	    case 2:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;
+	    	motion++;
+			modeControl = 2;
+			motioncnt=0;
+			// motion=1;
+	        break;
+		case 3:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.3; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
-			modeControl = 2;
+	    	traj_time = 10;
 	    	motion++;
-			// motion=1;
+			modeControl = 3;
 	        break;
-	    case 3:
+	    case 4:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
 			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 	    	motion++;
 	        break;
-	    case 4:
+	    case 5:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=-0.3; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
-			motion++;
-	    	break;
-		case 5:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 			motion++;
 	    	break;
 		case 6:
+			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
+			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
+			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
+	    	traj_time = 10;
+			motion++;
+	    	break;
+		case 7:
 			info_mm.q_target(0)=0.15; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 	    	motion++;
 			// motion=1;
 	        break;
-	    case 7:
+	    case 8:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
 			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 	    	motion++;
 	        break;
-	    case 8:
+	    case 9:
 			info_mm.q_target(0)=-0.2; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 			motion++;
 	    	break;
-		case 9:
+		case 10:
 			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;;
+	    	traj_time = 10;
 			motion=2;
 	    	break;
 
@@ -330,6 +417,8 @@ void compute()
 	
 	info_mm.act.T = cs_hyumm.getFK();
 	info_mm.act.R = cs_hyumm.getRMat();
+	info_mm.nom.T = cs_nom_hyumm.getFK();
+	info_mm.nom.R = cs_nom_hyumm.getRMat();
 
 	MM_Jacobian J_b_mm = cs_hyumm.getJ_b();
 	MM_Jacobian dJ_b_mm = cs_hyumm.getJdot_b();
@@ -368,31 +457,57 @@ void control()
 	info_mob.des.q_dot = info_mob.des.tau;
 
 	
-	// if(modeControl==1)
-	// {
+	if(modeControl==1)
+	{
 		// [Joint Space Nominal Controller]
 		info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
     	// info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.act.tau_ext);
-	// }
-	// else if(modeControl==2)
-	// {
-	// 	// [Task Space Nominal Controller]
-	// 	SE3 T_des;
-	// 	Twist V_des, V_dot_des;
-	// 	// T_des << -0.9848,	0,		0.17365,		0.649917,
-	// 	// 		  0,		1,		0,		-0.1765,
-	// 	// 		  -0.17365,		0,		-0.9848,0.579464,
-	// 	// 		  0,	0,		0,		1;
-	// 	T_des << -1,	0,		0,		0.649917,
-	// 			  0,	1,		0,		-0.1765,
-	// 			  0,	0,		-1,		0.579464,
-	// 			  0,	0,		0,		1;
-	// 	V_des = Twist::Zero();
-	// 	V_dot_des = Twist::Zero();
-	// 	// info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, T_des, V_des, V_dot_des);
-	// 	info_mm.nom.tau = cs_nom_hyumm.TaskRedundantIDC(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, T_des, V_des, V_dot_des);
+	}
+	else if(modeControl>1)
+	{
+		if(!motioncnt) 
+		{			
+			gt_offset = gt;
+			motioncnt++;
+		}
+		// [Task Space Nominal Controller]
+		double radius, omega;
+		radius = 0.1;
+		omega = PI2 * 0.1;
+		Vector3d x_offset;
+		// x_offset << 0.649917, -0.1765, 0.579464; // home position
+		x_offset << 0.649917, -0.1765, 0.579464; // home position
+
+		if(modeControl == 2)
+		{
+		info_mm.des.T << -1,	0,		0,		x_offset(0)+radius*(1-cos(omega*(gt-gt_offset))),
+				  0,	1,		0,		x_offset(1)+radius*sin(omega*(gt-gt_offset)),
+				  0,	0,		-1,		x_offset(2),
+				  0,	0,		0,		1;
+		info_mm.des.x_dot << radius*omega*sin(omega*(gt-gt_offset)), radius*omega*cos(omega*(gt-gt_offset)), 0, 0, 0, 0;
+		info_mm.des.x_ddot << radius*pow(omega,2)*cos(omega*(gt-gt_offset)), -radius*pow(omega,2)*sin(omega*(gt-gt_offset)), 0, 0, 0, 0;
+		}
+		else if(modeControl==3)	
+		{
+		info_mm.des.T << -1,	0,		0,		x_offset(0),
+				  0,	1,		0,		x_offset(1),
+				  0,	0,		-1,		x_offset(2),
+				  0,	0,		0,		1;
+		info_mm.des.x_dot << 0, 0, 0, 0, 0, 0;
+		info_mm.des.x_ddot << 0, 0, 0, 0, 0, 0;
+		}
+		// T_des << -0.000103673, 2.45944e-17, 1, 0.671776, 
+		// 		 3.13033e-16, 1, -2.4562e-17, -0.1865, 
+		// 		 -1, 3.13031e-16, -0.000103673, 1.09691, 
+ 		// 		 0, 0, 0, 1;
+
 		
-	// }
+		// V_des = Twist::Zero();
+		// V_dot_des = Twist::Zero();
+		// info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+		info_mm.nom.tau = cs_nom_hyumm.TaskRedundantIDC(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+		
+	}
 
 	
 	// [NRIC]
@@ -479,10 +594,10 @@ void motor_run(void *arg)
 	cs_nom_hyumm.setPIDgain(Kp_n_mm, Kd_n_mm, Ki_n_mm);
 
 	// Task
-	Task_Kp << 120, 120, 120, 30, 30, 30;
-	Task_Kv << 60, 60, 60, 15, 15, 15;
-	Task_Ki << 30, 30, 30, 7.5, 7.5, 7.5;
-	Task_K << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 250.0, 250.0, 175.0;
+	Task_Kp << 2000, 2000, 2000, 60, 60, 60;
+	Task_Kv << 1000, 1000, 1000, 30, 30, 30;
+	Task_Ki << 500, 500, 500, 15, 15, 15;
+	Task_K << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 400.0, 400.0, 350.0;
 	cs_nom_hyumm.setTaskgain(Task_Kp, Task_Kv, Task_Ki, Task_K);
 
     for(int j=0; j<MOBILE_DRIVE_NUM; ++j)
@@ -607,6 +722,56 @@ void runQtApplication(int argc, char* argv[]) {
   a.exec();
 }
 
+// Bullet task
+void bullet_run(void *arg)
+{
+	RTIME now, previous=0;
+	RTIME beginCycle, endCycle;
+	rt_task_set_periodic(NULL, TM_NOW, 40*cycle_ns);
+
+	//---------BULLET SETUP START------------------
+	b3PhysicsClientHandle b3client = b3ConnectSharedMemory(SHARED_MEMORY_KEY);
+	if (!b3CanSubmitCommand(b3client))
+	{
+	printf("Not connected, start a PyBullet server first, using python -m pybullet_utils.runServer\n");
+	exit(0);
+	}
+	b3RobotSimulatorClientAPI_InternalData b3data;
+	b3data.m_physicsClientHandle = b3client;
+	b3data.m_guiHelper = 0;
+	b3RobotSimulatorClientAPI_NoDirect b3sim;
+	b3sim.setInternalData(&b3data);
+
+	b3sim.setTimeStep(FIXED_TIMESTEP);
+	b3sim.resetSimulation();
+	b3sim.setGravity( btVector3(0 , 0 , -9.8));
+
+	// [ToDo] model path update
+	int robotId = b3sim.loadURDF("/home/robot/robot_ws/RTECAT_MobileManipulator/description/hyumm.urdf");
+	// int robotId = b3sim.loadURDF("/home/robot/robot_ws/RTIndy7/description/indy7.urdf");
+	b3sim.setRealTimeSimulation(false);
+	Bullet_Hyumm bt3hyumm(&b3sim,robotId);
+	
+	rt_printf("Start Bullet\n");
+	while (1)
+	{
+		beginCycle = rt_timer_read();
+		if(!system_ready)
+		{
+			bt3hyumm.reset_q(&b3sim, info_mm.nom.q);
+		}
+		else
+		{
+			bt3hyumm.reset_q(&b3sim, info_mm.nom.q);
+			b3sim.stepSimulation();
+
+		}
+		endCycle = rt_timer_read();
+		periodBullet = (unsigned long) endCycle - beginCycle;
+		rt_task_wait_period(NULL); //wait for next cycle
+	}
+}
+
 // Safety task
 void safety_run(void *arg)
 {
@@ -653,6 +818,41 @@ void print_run(void *arg)
 	 */
 	rt_task_set_periodic(NULL, TM_NOW, cycle_ns*100);
 	
+	// Joint data log
+	string filename1 = "joint_log.csv";
+	ifstream checkFile1(filename1);
+
+	if (checkFile1.is_open())
+	{
+		checkFile1.close();
+		remove(filename1.c_str());
+	}
+	ofstream newFile1(filename1);
+	if(newFile1.is_open())
+	{
+		newFile1<<"Time, q_r1, q_r2, q_r3, q_r4, q_r5, q_r6, q_r7, q_r8, q_r9, dq_r1, dq_r2, dq_r3, dq_r4, dq_r5, dq_r6, dq_r7, dq_r8, dq_r9, q_n1, q_n2, q_n3, q_n4, q_n5, q_n6, q_n7, q_n8, q_n9, dq_n1, dq_n2, dq_n3, dq_n4, dq_n5, dq_n6, dq_n7, dq_n8, dq_n9\n";
+		newFile1.close();
+	}
+	ofstream csvFile1(filename1, ios_base::app);
+
+	// Task data log
+	string filename2 = "task_log.csv";
+	ifstream checkFile2(filename2);
+
+	if (checkFile2.is_open())
+	{
+		checkFile2.close();
+		remove(filename2.c_str());
+	}
+
+	ofstream newFile2(filename2);
+	if(newFile2.is_open())
+	{
+		newFile2<<"Time, xr, yr, zr, q0r, q1r, q2r, q3r, xn, yn, zn, q0n, q1n, q2n, q3n\n";
+		newFile2.close();
+	}
+	ofstream csvFile2(filename2, ios_base::app);
+
 	while (1)
 	{
 		rt_task_wait_period(NULL); //wait for next cycle
@@ -699,12 +899,38 @@ void print_run(void *arg)
 			rt_printf("readFT: %lf, %lf, %lf, %lf, %lf, %lf\n", F_tmp(0),F_tmp(1),F_tmp(2),F_tmp(3),F_tmp(4),F_tmp(5));
 			rt_printf("resFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.F(0),info_mm.act.F(1),info_mm.act.F(2),info_mm.act.F(3),info_mm.act.F(4),info_mm.act.F(5));
 			rt_printf("tau_ext: %lf, %lf, %lf\n", info_mm.act.tau_ext(0), info_mm.act.tau_ext(1), info_mm.act.tau_ext(2));
+			rt_printf("Tdes: \t%lf, %lf, %lf, %lf\n", info_mm.des.T(0,0), info_mm.des.T(0,1), info_mm.des.T(0,2), info_mm.des.T(0,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(1,0), info_mm.des.T(1,1), info_mm.des.T(1,2), info_mm.des.T(1,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(2,0), info_mm.des.T(2,1), info_mm.des.T(2,2), info_mm.des.T(2,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(3,0), info_mm.des.T(3,1), info_mm.des.T(3,2), info_mm.des.T(3,3));
 			rt_printf("T: \t%lf, %lf, %lf, %lf\n", info_mm.act.T(0,0), info_mm.act.T(0,1), info_mm.act.T(0,2), info_mm.act.T(0,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(1,0), info_mm.act.T(1,1), info_mm.act.T(1,2), info_mm.act.T(1,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(2,0), info_mm.act.T(2,1), info_mm.act.T(2,2), info_mm.act.T(2,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(3,0), info_mm.act.T(3,1), info_mm.act.T(3,2), info_mm.act.T(3,3));
 			rt_printf("\n");
 			// */
+			
+			if(csvFile1.is_open())
+			{
+				csvFile1<<gt<<", ";
+				for (int i = 0; i < MM_DOF_NUM; ++i) csvFile1<<info_mm.act.q(i) << ", ";
+				for (int i = 0; i < MM_DOF_NUM; ++i) csvFile1<<info_mm.act.q_dot(i) << ", ";
+				for (int i = 0; i < MM_DOF_NUM; ++i) csvFile1<<info_mm.nom.q(i) << ", ";
+				for (int i = 0; i < MM_DOF_NUM; ++i) csvFile1<<info_mm.nom.q_dot(i) << ", ";
+				csvFile1<<"\n";
+			}
+			if(csvFile2.is_open())
+			{
+				Vector4d quat_r = mRot2Quat(info_mm.act.R);
+				Vector4d quat_n = mRot2Quat(info_mm.nom.R);
+
+				csvFile2<<gt<<", ";
+				for (int i = 0; i < 3; ++i) csvFile2<<info_mm.act.T(i,3) << ", "; // xr,yr,zr
+				for (int i = 0; i < 4; ++i) csvFile2<<quat_r(i) << ", ";
+				for (int i = 0; i < 3; ++i) csvFile2<<info_mm.nom.T(i,3) << ", ";
+				for (int i = 0; i < 4; ++i) csvFile2<<quat_n(i) << ", ";
+				csvFile2<<"\n";
+			}
 		}
 		else
 		{
@@ -716,12 +942,15 @@ void print_run(void *arg)
 			}
 		}
 	}
+	csvFile1.close();
+	csvFile2.close();
 }
 
 
 void signal_handler(int signum)
 {
     rt_task_delete(&motor_task);
+	rt_task_delete(&bullet_task);
     rt_task_delete(&print_task);
     rt_task_delete(&xddp_writer);
     
@@ -781,6 +1010,10 @@ int main(int argc, char *argv[])
     rt_task_create(&motor_task, "motor_task", 0, 99, 0);
     rt_task_set_affinity(&motor_task, &cpuset_rt2);
     rt_task_start(&motor_task, &motor_run, NULL);
+
+	rt_task_create(&bullet_task, "bullet_task", 0, 99, 0);
+    // rt_task_set_affinity(&bullet_task, &cpuset_rt1);
+    // rt_task_start(&bullet_task, &bullet_run, NULL);
 
     rt_task_create(&print_task, "print_task", 0, 70, 0);
     rt_task_set_affinity(&print_task, &cpuset_rt1);

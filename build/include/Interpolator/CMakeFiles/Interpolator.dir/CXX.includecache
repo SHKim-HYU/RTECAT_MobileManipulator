@@ -10,6 +10,8 @@
 Eigen/Dense
 -
 
+/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Interpolator/Interpolator_autogen/mocs_compilation.cpp
+
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator/TaskTrajectory.cpp
 TaskTrajectory.h
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/Interpolator/TaskTrajectory.h

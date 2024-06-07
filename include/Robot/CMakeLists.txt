@@ -4,7 +4,7 @@ project(Robot LANGUAGES CXX)
 set(CMAKE_DEBUG_POSTFIX "d")
 
 
-file(GLOB SOURCE_FILES "ServoAxis.cpp" "ServoAxis.h" "PropertyDefinition.h" "CS_Indy7.cpp" "CS_Indy7.h" "CS_hyumm.cpp" "CS_hyumm.h" "LieOperator.h" "LieOperator.cpp" "liegroup_robotics.h" "liegroup_robotics.cpp")
+file(GLOB SOURCE_FILES "*.cpp" "*.h" "*.c")
 
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
@@ -17,11 +17,6 @@ target_include_directories(${PROJECT_NAME}
 # Eigen3
 find_package(Eigen3 3.0 REQUIRED NO_MODULE)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen ${LAPACK_LIBRARIES})
-
-# LAPACK
-find_package(LAPACK REQUIRED)
-target_link_libraries(${PROJECT_NAME} ${LAPACK_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${LAPACK_INCLUDE_DIRS})
 
 # jsoncpp
 find_package(jsoncpp REQUIRED)
@@ -42,6 +37,16 @@ if (CASADI_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CASADI_INCLUDE_DIR})
     target_link_libraries(${PROJECT_NAME} ${CASADI_LIBRARIES} dl)
 endif ()
+
+
+add_compile_definitions(__BULLET__)
+find_package(Bullet REQUIRED)
+if (BULLET_FOUND)
+    MESSAGE(STATUS "BULLET_INCLUDE_DIRS = ${BULLET_INCLUDE_DIRS}")
+    MESSAGE(STATUS "BULLET_LIBRARIES = ${BULLET_LIBRARIES}")
+    target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
+endif()
 
 install(TARGETS ${PROJECT_MANE}
         ARCHIVE DESTINATION lib

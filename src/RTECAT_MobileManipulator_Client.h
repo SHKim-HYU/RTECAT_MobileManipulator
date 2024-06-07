@@ -44,6 +44,19 @@
 #include <PropertyDefinition.h>
 #include <liegroup_robotics.h>
 
+#include "SharedMemory/b3RobotSimulatorClientAPI_NoDirect.h"
+#include "SharedMemory/PhysicsClientSharedMemory_C_API.h"
+#include "SharedMemory/b3RobotSimulatorClientAPI_InternalData.h"
+#include "Bullet3Common/b3Vector3.h"
+#include "Bullet3Common/b3Quaternion.h"
+#include "Bullet3Common/b3HashMap.h"
+
+#include "Utils/b3Clock.h"
+#include <map>
+#include <vector>
+#include "bullet_hyumm.h"
+unsigned long periodBullet = 0;
+
 #define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
 
 #define NSEC_PER_SEC 			1000000000
@@ -104,11 +117,13 @@ int system_ready = 0;
 
 // Global time (beginning from zero)
 double gt=0;
+double gt_offset = 0;
 
 // Trajectory parameers
 double traj_time=0;
 int motion=-1;
 int modeControl = 0;
+int motioncnt = 0;
 
 // Controller Gains
 MM_JVec NRIC_Kp_mm;
@@ -127,6 +142,15 @@ MM_JVec Task_K;
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;
 Mob_Jacobian J_mob;
+
+
+extern const int CONTROL_RATE;
+const int CONTROL_RATE = 100;
+
+// Bullet globals
+const b3Scalar FIXED_TIMESTEP = 1.0 / ((b3Scalar)CONTROL_RATE);
+b3SharedMemoryCommandHandle command;
+int statusType, ret;
 
 
 

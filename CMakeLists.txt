@@ -202,6 +202,15 @@ if(Xenomai_FOUND)
     endforeach(comp_lists ${Xenomai_SKINS})
 endif(Xenomai_FOUND)
 
+add_compile_definitions(__BULLET__)
+find_package(Bullet REQUIRED)
+if (BULLET_FOUND)
+    MESSAGE(STATUS "BULLET_INCLUDE_DIRS = ${BULLET_INCLUDE_DIRS}")
+    MESSAGE(STATUS "BULLET_LIBRARIES = ${BULLET_LIBRARIES}")
+    target_include_directories(${CTRL_EXECUTABLE} PUBLIC ${BULLET_INCLUDE_DIRS})
+    target_link_libraries(${CTRL_EXECUTABLE} ${BULLET_LIBRARIES})
+endif()
+
 # casadi
 add_compile_definitions(__CASADI__)
 find_package(CASADI REQUIRED)

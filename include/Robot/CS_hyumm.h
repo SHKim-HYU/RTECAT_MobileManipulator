@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 // #include <casadi/casadi.hpp>
 #include <dlfcn.h>
-#include <lapacke.h>
+
 #include "liegroup_robotics.h"
 #include "PropertyDefinition.h"
 

@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/CS_hyumm.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/CS_hyumm.cpp.o"
   "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/LieOperator.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/LieOperator.cpp.o"
   "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/Robot_autogen/mocs_compilation.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/Robot_autogen/mocs_compilation.cpp.o"
+  "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/bullet_hyumm.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/bullet_hyumm.cpp.o"
   "/home/robot/robot_ws/RTECAT_MobileManipulator/include/Robot/liegroup_robotics.cpp" "/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/Robot/CMakeFiles/Robot.dir/liegroup_robotics.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
@@ -15,6 +16,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
   "Robot_EXPORTS"
+  "__BULLET__"
   "__CASADI__"
   )
 
@@ -31,6 +33,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../include/DarkStyleWindow"
   "/opt/casadi/include"
   "/opt/casadi/include/casadi"
+  "/usr/local/include/bullet"
   "/usr/include/eigen3"
   "/usr/include/jsoncpp"
   )
