@@ -4,7 +4,7 @@
 CS_hyumm::CS_hyumm()
 {
     robotModel = "hyumm";
-    n_dof = 6;
+    n_dof = 9;
 
     this->q.resize(this->n_dof);
     this->dq.resize(this->n_dof);
@@ -1344,7 +1344,7 @@ MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec
     invJw = invW * J_b.transpose() * (J_b * invW * J_b.transpose()).inverse();
     invZw = Z.transpose() * (Z * W * Z.transpose()).inverse();
 
-    Zw_dot_ref = dq_ddot.head<3>() + 1*(dq.head<3>()-q.head<3>()) + 0.1*(dq_dot.head<3>() - q_dot.head<3>());
+    Zw_dot_ref = dq_ddot.head<3>() + 100*(dq.head<3>()-q.head<3>()) + 10*(dq_dot.head<3>() - q_dot.head<3>());
     MM_JVec qddot_ref = invJw * (V_dot_ref - dJ_b * q_dot) + invZw* (Zw_dot_ref - (Z_dot*W+Z*W_dot)*q_dot);
     MM_JVec torques = M * qddot_ref + C * q_dot + G;
 

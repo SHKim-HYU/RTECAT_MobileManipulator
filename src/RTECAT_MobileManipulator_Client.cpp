@@ -10,7 +10,8 @@ RT_TASK safety_task;
 RT_TASK motor_task;
 RT_TASK bullet_task;
 RT_TASK print_task;
-RT_TASK xddp_writer;
+RT_TASK odom_writer;
+RT_TASK cmd_vel_listener;
 
 using namespace std;
 using namespace lr;
@@ -137,6 +138,7 @@ int initAxes()
 
         info_mob.des.e = Mob_JVec::Zero();
         info_mob.des.eint = Mob_JVec::Zero();
+		des_int = MM_JVec::Zero();
 	}
 
     // Arm Drive Init Axes
@@ -313,8 +315,8 @@ void trajectory_generation(){
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
 	    	traj_time = 10;
-	    	motion++;
-			modeControl = 2;
+	    	// motion++;
+			modeControl = 3;
 			motioncnt=0;
 			// motion=1;
 	        break;
@@ -398,10 +400,12 @@ void trajectory_generation(){
 		}
 
 		Axis_MM[i].TrajQuintic();
-
-		info_mm.des.q(i)=Axis_MM[i].getDesPosInRad();
-		info_mm.des.q_dot(i)=Axis_MM[i].getDesVelInRad();
-		info_mm.des.q_ddot(i)=Axis_MM[i].getDesAccInRad();
+		if(modeControl==1)
+		{
+			info_mm.des.q(i)=Axis_MM[i].getDesPosInRad();
+			info_mm.des.q_dot(i)=Axis_MM[i].getDesVelInRad();
+			info_mm.des.q_ddot(i)=Axis_MM[i].getDesAccInRad();
+		}
 	}
 }
 
@@ -495,6 +499,9 @@ void control()
 				  0,	0,		0,		1;
 		info_mm.des.x_dot << 0, 0, 0, 0, 0, 0;
 		info_mm.des.x_ddot << 0, 0, 0, 0, 0, 0;
+
+		des_int += info_mm.des.q_dot*period;
+		info_mm.des.q = des_int;
 		}
 		// T_des << -0.000103673, 2.45944e-17, 1, 0.671776, 
 		// 		 3.13033e-16, 1, -2.4562e-17, -0.1865, 
@@ -946,13 +953,131 @@ void print_run(void *arg)
 	csvFile2.close();
 }
 
+static void fail(const char *reason)
+{
+	perror(reason);
+	exit(EXIT_FAILURE);
+}
+
+void odom_run(void *arg) {
+    struct sockaddr_ipc addr;
+	uint addrlen = sizeof(addr);
+	int socket;
+	int ret, bufsize = 0;
+	struct timespec ts;
+	size_t poolsz;
+	char buf[128];
+	size_t BUFLEN = sizeof(packet::Odometry);
+	
+	struct packet::Odometry *odom_msg = (packet::Odometry *)malloc(BUFLEN);
+	
+    rt_task_set_periodic(NULL, TM_NOW, 1*cycle_ns); // 100ms
+
+	socket = __cobalt_socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
+	if (socket < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
+
+	poolsz = 16384; /* bytes */
+	if( __cobalt_setsockopt(socket, SOL_XDDP, XDDP_POOLSZ, &poolsz, sizeof(poolsz))==-1)
+		fail("setsockopt");
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sipc_family = AF_RTIPC;
+	addr.sipc_port = XDDP_PORT_ODOM;
+
+	if(__cobalt_bind(socket, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+		fail("bind");
+
+    while(1) 
+    {
+        rt_task_wait_period(NULL); //wait for next cycle
+		if(system_ready)
+		{
+			Quaterniond quaternion(cs_nom_hyumm.getRMat());
+
+			odom_msg->pose.position.x = info_mm.nom.q(0);
+			odom_msg->pose.position.y = info_mm.nom.q(1);
+			odom_msg->pose.orientation.x = quaternion.x();
+			odom_msg->pose.orientation.y = quaternion.y();
+			odom_msg->pose.orientation.z = quaternion.z();
+			odom_msg->pose.orientation.w = quaternion.w();
+			odom_msg->twist.linear.x = info_mm.nom.q_dot(0);
+			odom_msg->twist.linear.y = info_mm.nom.q_dot(1);
+			odom_msg->twist.angular.z = info_mm.nom.q_dot(2);
+			
+			ret = __cobalt_sendto(socket, odom_msg, BUFLEN, 0, (struct sockaddr *) &addr, addrlen);
+			// ret = __cobalt_sendto(socket, odom_msg, BUFLEN, 0, NULL, 0);
+			// if (ret != BUFLEN)
+			// {
+			// 	fail("sendto");		
+			// }
+		}
+	}
+	close(socket);
+
+	return;
+}
+
+void cmd_vel_run(void *arg) {
+    struct sockaddr_ipc addr;
+	uint addrlen = sizeof(addr);
+	int socket;
+	int ret, n = 0, len;
+	struct timespec ts;
+	size_t poolsz;
+	char buf[128];
+	size_t BUFLEN = sizeof(packet::Twist);
+	
+	struct packet::Twist *twist_msg = (packet::Twist *)malloc(BUFLEN);
+
+    rt_task_set_periodic(NULL, TM_NOW, 1*cycle_ns); // 100ms
+
+	socket = __cobalt_socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
+	if (socket < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
+
+	poolsz = 16384; /* bytes */
+	if(__cobalt_setsockopt(socket, SOL_XDDP, XDDP_POOLSZ, &poolsz, sizeof(poolsz))==-1)
+		fail("setsockopt");
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sipc_family = AF_RTIPC;
+	addr.sipc_port = XDDP_PORT_CMD_VEL;
+
+	if( __cobalt_bind(socket, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+		fail("bind");
+
+    while(1) 
+    {
+        rt_task_wait_period(NULL); //wait for next cycle
+
+
+		ret = __cobalt_recvfrom(socket, twist_msg, BUFLEN, 0, NULL, 0);
+
+		if(ret >0)
+		{
+
+			info_mm.des.q_dot.head(3) << twist_msg->linear.x , twist_msg->linear.y, twist_msg->angular.z;
+		}
+		
+	}
+
+	close(socket);
+
+	return;
+}
 
 void signal_handler(int signum)
 {
     rt_task_delete(&motor_task);
 	rt_task_delete(&bullet_task);
     rt_task_delete(&print_task);
-    rt_task_delete(&xddp_writer);
+    rt_task_delete(&odom_writer);
+	rt_task_delete(&cmd_vel_listener);
     
     for(int i=0; i<MOBILE_DRIVE_NUM; i++)
         ecat_iservo[i].setServoOff();
@@ -1006,6 +1131,14 @@ int main(int argc, char *argv[])
     rt_task_create(&safety_task, "safety_task", 0, 93, 0);
     rt_task_set_affinity(&safety_task, &cpuset_rt1);
 	rt_task_start(&safety_task, &safety_run, NULL);
+
+	rt_task_create(&odom_writer, "odom_writer", 0, 80, 0);
+    // rt_task_set_affinity(&odom_writer, &cpuset_rt1);
+	rt_task_start(&odom_writer, &odom_run, NULL);
+
+	rt_task_create(&cmd_vel_listener, "cmd_vel_listener", 0, 90, 0);
+    // rt_task_set_affinity(&cmd_vel_listener, &cpuset_rt1);
+	rt_task_start(&cmd_vel_listener, &cmd_vel_run, NULL);
 
     rt_task_create(&motor_task, "motor_task", 0, 99, 0);
     rt_task_set_affinity(&motor_task, &cpuset_rt2);

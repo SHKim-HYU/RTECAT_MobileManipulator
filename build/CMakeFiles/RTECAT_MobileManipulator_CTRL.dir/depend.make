@@ -188,6 +188,7 @@ CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../include/Robot/bullet_hyumm.h
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../include/Robot/json_loader.h
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../include/Robot/liegroup_robotics.h
+CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../include/Robot/xddp_packet.h
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../src/RTECAT_MobileManipulator_Client.cpp
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../src/RTECAT_MobileManipulator_Client.h
 CMakeFiles/RTECAT_MobileManipulator_CTRL.dir/src/RTECAT_MobileManipulator_Client.cpp.o: ../src/mainwindow.h

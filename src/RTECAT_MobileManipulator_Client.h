@@ -13,6 +13,7 @@
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 #include <rtdm/ipc.h> 
+#include "xddp_packet.h"
 
 #include "CS_Indy7.h"
 #include "CS_hyumm.h"
@@ -142,6 +143,8 @@ MM_JVec Task_K;
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;
 Mob_Jacobian J_mob;
+
+MM_JVec des_int;
 
 
 extern const int CONTROL_RATE;
