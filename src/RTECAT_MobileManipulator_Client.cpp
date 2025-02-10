@@ -3,6 +3,7 @@
 MOB_ROBOT_INFO info_mob;
 MM_ROBOT_INFO info_mm;
 
+CS_Indy7 cs_indy7;
 CS_hyumm cs_hyumm;
 CS_hyumm cs_nom_hyumm;
 
@@ -17,81 +18,10 @@ using namespace std;
 using namespace lr;
 
 
-inline double SIGN(double x) { 
-	return (x >= 0.0f) ? +1.0f : -1.0f; 
-}
-
-inline double NORM(double a, double b, double c, double d) { 
-	return sqrt(a * a + b * b + c * c + d * d); 
-}
-
-// quaternion = [w, x, y, z]'
-Vector4d mRot2Quat(const SO3& m) {
-	double r11 = m(0, 0);
-	double r12 = m(0, 1);
-	double r13 = m(0, 2);
-	double r21 = m(1, 0);
-	double r22 = m(1, 1);
-	double r23 = m(1, 2);
-	double r31 = m(2, 0);
-	double r32 = m(2, 1);
-	double r33 = m(2, 2);
-	double q0 = (r11 + r22 + r33 + 1.0f) / 4.0f;
-	double q1 = (r11 - r22 - r33 + 1.0f) / 4.0f;
-	double q2 = (-r11 + r22 - r33 + 1.0f) / 4.0f;
-	double q3 = (-r11 - r22 + r33 + 1.0f) / 4.0f;
-	if (q0 < 0.0f) {
-		q0 = 0.0f;
-	}
-	if (q1 < 0.0f) {
-		q1 = 0.0f;
-	}
-	if (q2 < 0.0f) {
-		q2 = 0.0f;
-	}
-	if (q3 < 0.0f) {
-		q3 = 0.0f;
-	}
-	q0 = sqrt(q0);
-	q1 = sqrt(q1);
-	q2 = sqrt(q2);
-	q3 = sqrt(q3);
-	if (q0 >= q1 && q0 >= q2 && q0 >= q3) {
-		q0 *= +1.0f;
-		q1 *= SIGN(r32 - r23);
-		q2 *= SIGN(r13 - r31);
-		q3 *= SIGN(r21 - r12);
-	}
-	else if (q1 >= q0 && q1 >= q2 && q1 >= q3) {
-		q0 *= SIGN(r32 - r23);
-		q1 *= +1.0f;
-		q2 *= SIGN(r21 + r12);
-		q3 *= SIGN(r13 + r31);
-	}
-	else if (q2 >= q0 && q2 >= q1 && q2 >= q3) {
-		q0 *= SIGN(r13 - r31);
-		q1 *= SIGN(r21 + r12);
-		q2 *= +1.0f;
-		q3 *= SIGN(r32 + r23);
-	}
-	else if (q3 >= q0 && q3 >= q1 && q3 >= q2) {
-		q0 *= SIGN(r21 - r12);
-		q1 *= SIGN(r31 + r13);
-		q2 *= SIGN(r32 + r23);
-		q3 *= +1.0f;
-	}
-	else {
-		printf("coding error\n");
-	}
-	double r = NORM(q0, q1, q2, q3);
-	q0 /= r;
-	q1 /= r;
-	q2 /= r;
-	q3 /= r;
-
-	Vector4d res;
-	res << q0, q1, q2, q3;
-	return res;
+static void fail(const char *reason)
+{
+	perror(reason);
+	exit(EXIT_FAILURE);
 }
 
 bool isSlaveInit()
@@ -250,7 +180,7 @@ void readData()
 	}
 
 	// Mapping status to Mobile Manipulator
-	info_mob.act.x_dot = J_mob * info_mob.act.q_dot;
+	info_mob.act.x_dot = Einv_mob * J_mob * info_mob.act.q_dot;
 	info_mob.act.x += info_mob.act.x_dot*period;
 
 	info_mm.act.q_dot.segment<MOBILE_DOF_NUM>(0) = info_mob.act.x_dot;
@@ -303,6 +233,8 @@ void trajectory_generation(){
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-0.707; info_mm.q_target(8)=0.0;
 			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=-1.5709;
 			info_mm.q_target(6)=0.0; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=0.0;
+			// info_mm.q_target(3)=0.0; info_mm.q_target(4)=-0.56; info_mm.q_target(5)=-2.14;
+			// info_mm.q_target(6)=0.0; info_mm.q_target(7)=1.13; info_mm.q_target(8)=0.0;
 			// info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
 			// info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
 	    	traj_time = 3;
@@ -310,74 +242,43 @@ void trajectory_generation(){
 	    	motion++;
 			// motion=1;
 	        break;
-	    case 2:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-	    	// motion++;
-			modeControl = 3;
-			motioncnt=0;
-			// motion=1;
-	        break;
+
+		case 2:
+			cs_nom_hyumm.resetTaskAdmittance();
+	    	info_mm.T_init = info_mm.nom.T;
+			info_mm.T_target << 0.0, -0, 1.0, 1.072989,
+							0.0, 1.0, 0, -0.177496,
+							-1.0, 0.0, 0.0, 0.67077,
+							0, 0, 0, 1;
+			// info_mm.T_target << -1, 1.40483e-21, 1.26536e-05, 0.350005, 
+ 			// 				1.40484e-21, 1, 1.40483e-21, -0.1865, 
+ 			// 				-1.26536e-05, 1.40484e-21, -1, 0.502002, 
+ 			// 				0, 0, 0, 1;
+			traj_time = 10;	
+			modeControl=2;
+			motioncnt = 0;
+			// motion++;
+			motion=4;
+			break;
 		case 3:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.3; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-	    	motion++;
-			modeControl = 3;
-	        break;
-	    case 4:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
-			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
-	    	traj_time = 10;
-	    	motion++;
-	        break;
-	    case 5:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=-0.3; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-			motion++;
-	    	break;
-		case 6:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-			motion++;
-	    	break;
-		case 7:
-			info_mm.q_target(0)=0.15; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-	    	motion++;
-			// motion=1;
-	        break;
-	    case 8:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=-1.5709; info_mm.q_target(4)=0.4071; info_mm.q_target(5)=-0.4071;
-			info_mm.q_target(6)=-1.5709; info_mm.q_target(7)=-1.5709; info_mm.q_target(8)=-1.5709;
-	    	traj_time = 10;
-	    	motion++;
-	        break;
-	    case 9:
-			info_mm.q_target(0)=-0.2; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
-			motion++;
-	    	break;
-		case 10:
-			info_mm.q_target(0)=0.0; info_mm.q_target(1)=0.0; info_mm.q_target(2)=0.0;
-			info_mm.q_target(3)=0.0; info_mm.q_target(4)=0.0; info_mm.q_target(5)=0.0;
-			info_mm.q_target(6)=0.0; info_mm.q_target(7)=0.0; info_mm.q_target(8)=0.0;
-	    	traj_time = 10;
+	    	info_mm.T_init = info_mm.nom.T;
+			info_mm.T_target << 0.0, -0, 1.0, 0.872989,
+							0.0, 1.0, 0, -0.177496,
+							-1.0, 0.0, 0.0, 0.87077,
+							0, 0, 0, 1;
+			info_mm.T_target << -1, 1.40483e-21, 1.26536e-05, 0.350005, 
+ 							1.40484e-21, 1, 1.40483e-21, -0.1865, 
+ 							-1.26536e-05, 1.40484e-21, -1, 0.502002, 
+ 							0, 0, 0, 1;
+			traj_time = 10;	
+			modeControl=2;
+			motioncnt = 0;
 			motion=2;
-	    	break;
+			break;
+
+		case 4: // Hold on Task motion
+	    	
+			break;	    
 
 		default:
 			info_mm.q_target(0)=info_mm.act.q(0); info_mm.q_target(1)=info_mm.act.q(1); info_mm.q_target(2)=info_mm.act.q(2);
@@ -407,6 +308,14 @@ void trajectory_generation(){
 			info_mm.des.q_ddot(i)=Axis_MM[i].getDesAccInRad();
 		}
 	}
+
+	// 3. Lie Screw Trajectory --> [ToDo] It will be replaced to liescrewtraj function
+	if(!motioncnt) 
+	{			
+		gt_offset = gt;
+		motioncnt++;
+	}
+	LieScrewTrajectory(info_mm.T_init, info_mm.T_target, info_mm.V_init, info_mm.V_target, info_mm.V_init, info_mm.V_target, traj_time, gt-gt_offset, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
 }
 
 void compute()
@@ -415,10 +324,13 @@ void compute()
 	cs_hyumm.updateRobot(info_mm.act.q, info_mm.act.q_dot);
 	// Update nominal
 	cs_nom_hyumm.updateRobot(info_mm.nom.q , info_mm.nom.q_dot);
+	// Update Indy7
+	cs_indy7.updateRobot(info_mm.nom.q.tail(6), info_mm.nom.q_dot.tail(6));
 	
 	info_mm.act.CoM_x = cs_hyumm.getCoM();
-	info_mm.act.J_com = cs_hyumm.getJ_com();
-	
+	info_mm.nom.J_com = cs_nom_hyumm.getJ_com();
+	Vector3d v_com = info_mm.nom.J_com*info_mm.nom.q_dot;
+	// rt_printf("v_com: %lf, %lf, %lf\n", v_com(0), v_com(1), v_com(2));
 	info_mm.act.T = cs_hyumm.getFK();
 	info_mm.act.R = cs_hyumm.getRMat();
 	info_mm.nom.T = cs_nom_hyumm.getFK();
@@ -432,19 +344,109 @@ void compute()
 	Twist F_mometum = cs_hyumm.computeF_Tool(info_mm.act.x_dot, info_mm.act.x_ddot);
 	
 	// info_mm.act.F = F_tmp-F_mometum;
-	info_mm.act.F = cs_hyumm.computeF_Threshold(F_tmp-F_mometum);
+	info_mm.act.F = cs_hyumm.computeF_Threshold(F_tmp);
 	info_mm.act.tau_ext = J_b_mm.transpose()*(info_mm.act.F);
 
 	info_mm.act.tau_fric = cs_hyumm.FrictionEstimation(info_mm.act.q_dot);
-	// info.act.tau_fric = JVec::Zero();
+	// info_mm.act.tau_fric = JVec::Zero();
+
+	E_mob << cos(info_mm.nom.q(2)), sin(info_mm.nom.q(2)), 0,
+			-sin(info_mm.nom.q(2)), cos(info_mm.nom.q(2)), 0,
+			0, 0, 1;
+
+	Einv_mob = E_mob.transpose();
+
+	manipulability = cs_indy7.getManipulability();
 }
 
 void control()
-{
+{	
+	if(modeControl==0)
+	{
+		// info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q);
+		MM_JVec G_damp = {2, 2, 2, 0.5, 0.5, 0.5, 1.0, 1.0, 0.05};
+		info_mm.nom.tau = cs_nom_hyumm.computeG(info_mm.nom.q) - G_damp.cwiseProduct(info_mm.nom.q_dot) + info_mm.act.tau_ext;
+		// [Simulation]
+		cs_nom_hyumm.computeRK45(info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.tau, info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.q_ddot);
+			
+		// [NRIC]
+		info_mm.act.tau_aux = cs_hyumm.NRIC(info_mm.act.q, info_mm.act.q_dot, info_mm.nom.q, info_mm.nom.q_dot);
+		// info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux + info_mm.act.tau_ext;
+		info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux;
+	}
+	else if(modeControl==1)
+	{
+		// [Joint Space Nominal Controller]
+		// info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
+    	info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.act.tau_ext);
+		// info_mm.nom.tau = cs_nom_hyumm.PassivityInverseDynamicControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
 
-    double Kp = 0.1;
+		// [Simulation]
+		cs_nom_hyumm.computeRK45(info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.tau, info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.q_ddot);
+			
+		// [NRIC]
+		info_mm.act.tau_aux = cs_hyumm.NRIC(info_mm.act.q, info_mm.act.q_dot, info_mm.nom.q, info_mm.nom.q_dot);
+		info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux;
+	}
+	else if(modeControl==2)
+	{
+		des_int += info_mm.des.q_dot*period;
+		info_mm.des.q = des_int;
+
+		// [Task Space Nominal Controller]
+				
+		// info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+		// info_mm.nom.tau = cs_nom_hyumm.TaskPassivityInverseDynamicsControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+		// info_mm.nom.tau = cs_nom_hyumm.TaskImpedanceControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot, Twist::Zero(), info_mm.act.F);
+		// info_mm.nom.tau = cs_nom_hyumm.TaskPassivityImpedanceControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot, Twist::Zero(), info_mm.act.F);
+
+		info_mm.nom.tau = cs_nom_hyumm.TaskRedundantImpedanceControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot, Twist::Zero(), info_mm.act.F);
+		// info_mm.nom.tau = cs_nom_hyumm.TaskRedundantIDC(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+
+		// [Simulation]
+		cs_nom_hyumm.computeRK45(info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.tau, info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.q_ddot);
+			
+		// [NRIC]
+		info_mm.act.tau_aux = cs_hyumm.NRIC(info_mm.act.q, info_mm.act.q_dot, info_mm.nom.q, info_mm.nom.q_dot);
+		info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux;
+		
+	}
+	else if(modeControl==3)
+	{
+		// [Task Space Nominal Controller]
+		if(gt>5)
+			// info_mm.des.F << 0, 0, -10, 0, 0, 0;
+			info_mm.des.F << 0, 0, 0, 0, 0, 0;
+		// info_mm.act.F << 0, 0, 0, 0, 0, 0;
+
+		cs_nom_hyumm.TaskAdmittance(info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot, info_mm.sim.T, info_mm.sim.x_dot, info_mm.sim.x_ddot, info_mm.des.F, info_mm.act.F);
+		info_mm.nom.q_ddot = cs_nom_hyumm.TaskStablePD(info_mm.sim.T, info_mm.sim.x_dot, info_mm.sim.x_ddot, info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
+
+		// info_mm.nom.q_ddot = cs_nom_hyumm.TaskStablePD(info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
+		// info_mm.nom.q_ddot = cs_nom_hyumm.TaskStablePDImpedance(info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot, info_mm.des.F, info_mm.act.F);
+		info_mm.nom.q_dot += info_mm.nom.q_ddot*period;
+		info_mm.nom.q += info_mm.nom.q_dot*period;
+			
+		// [NRIC]
+		info_mm.act.tau_aux = cs_hyumm.NRIC(info_mm.act.q, info_mm.act.q_dot, info_mm.nom.q, info_mm.nom.q_dot);
+		// info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux + info_mm.act.tau_ext;
+		info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux;
+		// info_mm.des.tau = info_mm.act.tau_aux;
+	}
+
+	
+
+	// [Gravity Compensator]
+	// Vector3d _com = {0,0,-0.124};
+	// double _m = 2.5;
+	// MM_JVec _addtor;
+	// _addtor = cs_hyumm.addLoadedTorque(info_mm.act.q, _com, _m);
+	// info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q) + _addtor;
+	// info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q);
+
+	double Kp = 0.1;
     double Kd = 0.01;
-	double Ki = 10;
+	double Ki = 0;
 	double Mb = 100;
 
 	// Mobile Base Controller
@@ -453,79 +455,11 @@ void control()
 		info_mm.des.e(i) = info_mm.nom.q(i)-info_mm.act.q(i);
 		info_mm.des.edot(i) = info_mm.nom.q_dot(i)-info_mm.act.q_dot(i);
 		info_mm.des.eint(i) = info_mm.des.eint(i) + info_mm.des.e(i)*period;
-		// info_mm.des.tau(i) = info_mm.des.q_dot(i) + 0.1*info_mm.des.edot(i) + 1*info_mm.des.e(i) + info_mm.act.tau_ext(i)/Mb;
 
 		info_mm.des.tau(i) = info_mm.nom.q_dot(i) + Kd*info_mm.des.edot(i) + Kp*info_mm.des.e(i) + Ki*info_mm.des.eint(i);
     }
-	info_mob.des.tau = Jinv_mob * info_mm.des.tau.segment<MOBILE_DOF_NUM>(0);
+	info_mob.des.tau = Jinv_mob * E_mob * info_mm.des.tau.head(3);
 	info_mob.des.q_dot = info_mob.des.tau;
-
-	
-	if(modeControl==1)
-	{
-		// [Joint Space Nominal Controller]
-		info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot);
-    	// info_mm.nom.tau = cs_nom_hyumm.ComputedTorqueControl(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.act.tau_ext);
-	}
-	else if(modeControl>1)
-	{
-		if(!motioncnt) 
-		{			
-			gt_offset = gt;
-			motioncnt++;
-		}
-		// [Task Space Nominal Controller]
-		double radius, omega;
-		radius = 0.1;
-		omega = PI2 * 0.1;
-		Vector3d x_offset;
-		// x_offset << 0.649917, -0.1765, 0.579464; // home position
-		x_offset << 0.649917, -0.1765, 0.579464; // home position
-
-		if(modeControl == 2)
-		{
-		info_mm.des.T << -1,	0,		0,		x_offset(0)+radius*(1-cos(omega*(gt-gt_offset))),
-				  0,	1,		0,		x_offset(1)+radius*sin(omega*(gt-gt_offset)),
-				  0,	0,		-1,		x_offset(2),
-				  0,	0,		0,		1;
-		info_mm.des.x_dot << radius*omega*sin(omega*(gt-gt_offset)), radius*omega*cos(omega*(gt-gt_offset)), 0, 0, 0, 0;
-		info_mm.des.x_ddot << radius*pow(omega,2)*cos(omega*(gt-gt_offset)), -radius*pow(omega,2)*sin(omega*(gt-gt_offset)), 0, 0, 0, 0;
-		}
-		else if(modeControl==3)	
-		{
-		info_mm.des.T << -1,	0,		0,		x_offset(0),
-				  0,	1,		0,		x_offset(1),
-				  0,	0,		-1,		x_offset(2),
-				  0,	0,		0,		1;
-		info_mm.des.x_dot << 0, 0, 0, 0, 0, 0;
-		info_mm.des.x_ddot << 0, 0, 0, 0, 0, 0;
-
-		des_int += info_mm.des.q_dot*period;
-		info_mm.des.q = des_int;
-		}
-		// T_des << -0.000103673, 2.45944e-17, 1, 0.671776, 
-		// 		 3.13033e-16, 1, -2.4562e-17, -0.1865, 
-		// 		 -1, 3.13031e-16, -0.000103673, 1.09691, 
- 		// 		 0, 0, 0, 1;
-
-		
-		// V_des = Twist::Zero();
-		// V_dot_des = Twist::Zero();
-		// info_mm.nom.tau = cs_nom_hyumm.TaskInverseDynamicsControl(info_mm.nom.q_dot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
-		info_mm.nom.tau = cs_nom_hyumm.TaskRedundantIDC(info_mm.nom.q, info_mm.nom.q_dot, info_mm.des.q, info_mm.des.q_dot, info_mm.des.q_ddot, info_mm.des.T, info_mm.des.x_dot, info_mm.des.x_ddot);
-		
-	}
-
-	
-	// [NRIC]
-	info_mm.act.tau_aux = cs_hyumm.NRIC(info_mm.act.q, info_mm.act.q_dot, info_mm.nom.q, info_mm.nom.q_dot);
-	info_mm.des.tau = info_mm.nom.tau - info_mm.act.tau_aux;
-
-	// [Simulation]
-	cs_nom_hyumm.computeRK45(info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.tau, info_mm.nom.q, info_mm.nom.q_dot, info_mm.nom.q_ddot);
-	
-	// [Gravity Compensator]
-	// info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q);
 }
 
 void writeData()
@@ -586,26 +520,48 @@ void motor_run(void *arg)
 	info_mm.des.F_CB = Vector6d::Zero();
 	info_mm.act.tau_aux = MM_JVec::Zero();
 
+
 	// Real
-	NRIC_Kp_mm << 50.0, 50.0, 50.0, 20.0, 25.0, 10.0, 3.0, 3.0, 1.5;
-	NRIC_Ki_mm << 8.0, 8.0, 8.0, 5.0, 5.5, 2.5, 0.8, 0.8, 0.6;
-	NRIC_K_gamma_mm << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 250.0, 250.0, 175.0;
-	cs_hyumm.setNRICgain(NRIC_Kp_mm, NRIC_Ki_mm, NRIC_K_gamma_mm);
+	NRIC_Kp << 50.0, 50.0, 50.0, 20.0, 25.0, 10.0, 3.0, 3.0, 1.5;
+	NRIC_Ki << 8.0, 8.0, 8.0, 4.0, 5.0, 2.0, 0.6, 0.6, 0.3;
+	// NRIC_K << 100, 100, 100, 80.0, 80.0, 50.0, 15.0, 15.0, 15.0;
+	NRIC_K << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 250.0, 250.0, 175.0;
+	NRIC_gamma << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 250.0, 250.0, 175.0;
+	
+	cs_hyumm.setNRICgain(NRIC_Kp, NRIC_Ki, NRIC_K,  NRIC_gamma);
 	
 	// nominal
-	Kp_n_mm << 80.0, 80.0, 80.0, 50.0, 50.0, 30.0, 20.0, 20.0, 20.0;
-	Kd_n_mm << 55.0, 55.0, 55.0, 5.0, 5.0, 3.0, 2.0, 2.0, 2.0;
-	// Kp_n_mm << 8.0, 8.0, 8.0, 2.0, 2.0, 1.0, 0.50, 0.50, 0.50;
-	// Kd_n_mm << 5.0, 5.0, 5.0, 0.2, 0.2, 0.10, 0.05, 0.05, 0.05;
-	Ki_n_mm = MM_JVec::Zero();
-	cs_nom_hyumm.setPIDgain(Kp_n_mm, Kd_n_mm, Ki_n_mm);
+	// for IDC
+	Kp_n << 80.0, 80.0, 80.0, 50.0, 50.0, 30.0, 20.0, 20.0, 20.0;
+	Kd_n << 55.0, 55.0, 55.0, 5.0, 5.0, 3.0, 2.0, 2.0, 2.0;
+	K_n << 1.5,1.5,1.5,1,1,0.5,0.3,0.2,0.2;
+	cs_nom_hyumm.setPIDgain(Kp_n, Kd_n, K_n);
 
 	// Task
-	Task_Kp << 2000, 2000, 2000, 60, 60, 60;
-	Task_Kv << 1000, 1000, 1000, 30, 30, 30;
-	Task_Ki << 500, 500, 500, 15, 15, 15;
-	Task_K << 700.0, 700.0, 700.0, 550.0, 600.0, 450.0, 400.0, 400.0, 350.0;
-	cs_nom_hyumm.setTaskgain(Task_Kp, Task_Kv, Task_Ki, Task_K);
+	// for IDC
+	// Task_Kp << 8000, 8000, 8000, 1000, 1000, 1000;
+	// Task_Kv << 1000, 1000, 1000, 500, 500, 500;
+	// Task_K << 1,1,0.5,0.3,0.2,0.2;
+	// for pIDC
+	// Task_Kp << 200000, 200000, 200000, 200000, 200000, 200000;
+	// Task_Kv << 1000, 1000, 1000, 1000, 1000, 1000;
+	Task_K << 1.5,1.5,1.5,1,1,0.5,0.3,0.2,0.2;
+	// for SPD
+	Task_Kp << 1, 1, 1, 0.033, 0.033, 0.033;
+	// Task_Kp << 1, 1, 1, 1, 1, 1;
+	Task_Kp = Task_Kp * 1e6;
+	Task_Kv = Task_Kp*period*30.0;
+	cs_nom_hyumm.setTaskgain(Task_Kp, Task_Kv, Task_K);
+	
+	// for Impedance model
+	A_.diagonal() << 4, 4, 4, 4, 4, 4;
+	// A_.diagonal() << 5, 5, 5, 5, 5, 5;
+    K_.diagonal() << 10, 10, 10, 30000, 30000, 30000;
+	for(int i=0;i<6;i++)
+		D_(i,i) = 2*1.0*sqrt(A_(i,i)*K_(i,i));
+	// D_(0,0) = 2; D_(1,1) = 2; D_(2,2) = 2; 
+	cs_nom_hyumm.setTaskImpedancegain(A_,D_,K_);
+
 
     for(int j=0; j<MOBILE_DRIVE_NUM; ++j)
 	{
@@ -660,6 +616,11 @@ void motor_run(void *arg)
         }
 		else
 		{
+			// Vector3d _com = {0,0,-0.124};
+			// double _m = 2.5;
+			// MM_JVec _addtor;
+			// _addtor = cs_hyumm.addLoadedTorque(info_mm.act.q, _com, _m);
+			// info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q) + _addtor;
 			info_mm.des.tau = cs_hyumm.computeG(info_mm.act.q);
 		}
         // Write Joint Data
@@ -688,6 +649,14 @@ void motor_run(void *arg)
 				ft_init_cnt++;
 			}
 			else if(ft_init_cnt==2)
+			{
+				// Set bias
+				UINT32 FTConfigParam=FT_SET_BIAS;
+				ecat_tool[0].writeFTconfig(FTConfigParam);			
+        		ecat_master.RxUpdate();
+				ft_init_cnt++;
+			}
+			else if(ft_init_cnt==3)
 			{
 				// Set Filter 10Hz
 				UINT32 FTConfigParam=FT_SET_FILTER_500;
@@ -729,56 +698,6 @@ void runQtApplication(int argc, char* argv[]) {
   a.exec();
 }
 
-// Bullet task
-void bullet_run(void *arg)
-{
-	RTIME now, previous=0;
-	RTIME beginCycle, endCycle;
-	rt_task_set_periodic(NULL, TM_NOW, 40*cycle_ns);
-
-	//---------BULLET SETUP START------------------
-	b3PhysicsClientHandle b3client = b3ConnectSharedMemory(SHARED_MEMORY_KEY);
-	if (!b3CanSubmitCommand(b3client))
-	{
-	printf("Not connected, start a PyBullet server first, using python -m pybullet_utils.runServer\n");
-	exit(0);
-	}
-	b3RobotSimulatorClientAPI_InternalData b3data;
-	b3data.m_physicsClientHandle = b3client;
-	b3data.m_guiHelper = 0;
-	b3RobotSimulatorClientAPI_NoDirect b3sim;
-	b3sim.setInternalData(&b3data);
-
-	b3sim.setTimeStep(FIXED_TIMESTEP);
-	b3sim.resetSimulation();
-	b3sim.setGravity( btVector3(0 , 0 , -9.8));
-
-	// [ToDo] model path update
-	int robotId = b3sim.loadURDF("/home/robot/robot_ws/RTECAT_MobileManipulator/description/hyumm.urdf");
-	// int robotId = b3sim.loadURDF("/home/robot/robot_ws/RTIndy7/description/indy7.urdf");
-	b3sim.setRealTimeSimulation(false);
-	Bullet_Hyumm bt3hyumm(&b3sim,robotId);
-	
-	rt_printf("Start Bullet\n");
-	while (1)
-	{
-		beginCycle = rt_timer_read();
-		if(!system_ready)
-		{
-			bt3hyumm.reset_q(&b3sim, info_mm.nom.q);
-		}
-		else
-		{
-			bt3hyumm.reset_q(&b3sim, info_mm.nom.q);
-			b3sim.stepSimulation();
-
-		}
-		endCycle = rt_timer_read();
-		periodBullet = (unsigned long) endCycle - beginCycle;
-		rt_task_wait_period(NULL); //wait for next cycle
-	}
-}
-
 // Safety task
 void safety_run(void *arg)
 {
@@ -801,12 +720,20 @@ void safety_run(void *arg)
 			{
 				if(Axis_Core[i].isLimitReached())
 				{
-					for(int i=0;i<NRMK_DRIVE_NUM;i++)
-						ecat_drive[i].setServoOff();
+					ecat_drive[i].setServoOff();
 					rt_printf("Servo Off!!\n");
-					break;
+					// break;
 				}
 			}
+			if(info_mm.nom.q.array().isNaN().any())
+			{
+				rt_printf("nan occured\n");
+				for(int i=0; i<NRMK_DRIVE_NUM; i++)
+					ecat_drive[i].setServoOff();
+				for(int i=0; i<MOBILE_DRIVE_NUM; i++)
+					ecat_iservo[i].setServoOff();
+			}
+
 		}
 	}
 }
@@ -823,8 +750,8 @@ void print_run(void *arg)
 	 *            start time,
 	 *            period (here: 100ms = 0.1s)
 	 */
-	rt_task_set_periodic(NULL, TM_NOW, cycle_ns*100);
-	
+	rt_task_set_periodic(NULL, TM_NOW, cycle_ns*1);
+	/*
 	// Joint data log
 	string filename1 = "joint_log.csv";
 	ifstream checkFile1(filename1);
@@ -859,7 +786,7 @@ void print_run(void *arg)
 		newFile2.close();
 	}
 	ofstream csvFile2(filename2, ios_base::app);
-
+	*/
 	while (1)
 	{
 		rt_task_wait_period(NULL); //wait for next cycle
@@ -906,17 +833,23 @@ void print_run(void *arg)
 			rt_printf("readFT: %lf, %lf, %lf, %lf, %lf, %lf\n", F_tmp(0),F_tmp(1),F_tmp(2),F_tmp(3),F_tmp(4),F_tmp(5));
 			rt_printf("resFT: %lf, %lf, %lf, %lf, %lf, %lf\n", info_mm.act.F(0),info_mm.act.F(1),info_mm.act.F(2),info_mm.act.F(3),info_mm.act.F(4),info_mm.act.F(5));
 			rt_printf("tau_ext: %lf, %lf, %lf\n", info_mm.act.tau_ext(0), info_mm.act.tau_ext(1), info_mm.act.tau_ext(2));
+			rt_printf("manipulability: %lf\n",manipulability);
 			rt_printf("Tdes: \t%lf, %lf, %lf, %lf\n", info_mm.des.T(0,0), info_mm.des.T(0,1), info_mm.des.T(0,2), info_mm.des.T(0,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(1,0), info_mm.des.T(1,1), info_mm.des.T(1,2), info_mm.des.T(1,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(2,0), info_mm.des.T(2,1), info_mm.des.T(2,2), info_mm.des.T(2,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.des.T(3,0), info_mm.des.T(3,1), info_mm.des.T(3,2), info_mm.des.T(3,3));
+			rt_printf("T: \t%lf, %lf, %lf, %lf\n", info_mm.nom.T(0,0), info_mm.nom.T(0,1), info_mm.nom.T(0,2), info_mm.nom.T(0,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.nom.T(1,0), info_mm.nom.T(1,1), info_mm.nom.T(1,2), info_mm.nom.T(1,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.nom.T(2,0), info_mm.nom.T(2,1), info_mm.nom.T(2,2), info_mm.nom.T(2,3));
+			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.nom.T(3,0), info_mm.nom.T(3,1), info_mm.nom.T(3,2), info_mm.nom.T(3,3));
 			rt_printf("T: \t%lf, %lf, %lf, %lf\n", info_mm.act.T(0,0), info_mm.act.T(0,1), info_mm.act.T(0,2), info_mm.act.T(0,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(1,0), info_mm.act.T(1,1), info_mm.act.T(1,2), info_mm.act.T(1,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(2,0), info_mm.act.T(2,1), info_mm.act.T(2,2), info_mm.act.T(2,3));
 			rt_printf("\t %lf, %lf, %lf, %lf\n", info_mm.act.T(3,0), info_mm.act.T(3,1), info_mm.act.T(3,2), info_mm.act.T(3,3));
 			rt_printf("\n");
+			rt_printf("\n");
 			// */
-			
+			/*
 			if(csvFile1.is_open())
 			{
 				csvFile1<<gt<<", ";
@@ -928,16 +861,17 @@ void print_run(void *arg)
 			}
 			if(csvFile2.is_open())
 			{
-				Vector4d quat_r = mRot2Quat(info_mm.act.R);
-				Vector4d quat_n = mRot2Quat(info_mm.nom.R);
-
+				Quaterniond quat_r(info_mm.act.R);
+				Quaterniond quat_n(info_mm.nom.R);
+				
 				csvFile2<<gt<<", ";
 				for (int i = 0; i < 3; ++i) csvFile2<<info_mm.act.T(i,3) << ", "; // xr,yr,zr
-				for (int i = 0; i < 4; ++i) csvFile2<<quat_r(i) << ", ";
+				for (int i = 0; i < 4; ++i) csvFile2<<quat_r.vec()(i) << ", ";
 				for (int i = 0; i < 3; ++i) csvFile2<<info_mm.nom.T(i,3) << ", ";
-				for (int i = 0; i < 4; ++i) csvFile2<<quat_n(i) << ", ";
+				for (int i = 0; i < 4; ++i) csvFile2<<quat_n.vec()(i) << ", ";
 				csvFile2<<"\n";
 			}
+			*/
 		}
 		else
 		{
@@ -949,14 +883,79 @@ void print_run(void *arg)
 			}
 		}
 	}
+	/*
 	csvFile1.close();
 	csvFile2.close();
+	*/
 }
 
-static void fail(const char *reason)
+// Bullet task
+void bullet_run(void *arg)
 {
-	perror(reason);
-	exit(EXIT_FAILURE);
+	struct sockaddr_ipc addr_nom, addr_act;
+	uint addr_nom_len = sizeof(addr_nom);
+	uint addr_act_len = sizeof(addr_act);
+	int socket_nom, socket_act;
+	int ret_nom, ret_act;
+	struct timespec ts;
+	size_t poolsz;
+	size_t BUFLEN = sizeof(packet::JointState);
+
+	struct packet::JointState *bullet_nom_msg = (packet::JointState *)malloc(BUFLEN);
+	struct packet::JointState *bullet_act_msg = (packet::JointState *)malloc(BUFLEN);
+	
+    rt_task_set_periodic(NULL, TM_NOW, 100*cycle_ns); // 100ms
+
+	socket_nom = __cobalt_socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
+	if (socket_nom < 0) {
+		perror("socket_nom");
+		exit(EXIT_FAILURE);
+	}
+	socket_act = __cobalt_socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
+	if (socket_act < 0) {
+		perror("socket_act");
+		exit(EXIT_FAILURE);
+	}
+
+	poolsz = 16384; /* bytes */
+	if( __cobalt_setsockopt(socket_nom, SOL_XDDP, XDDP_POOLSZ, &poolsz, sizeof(poolsz))==-1)
+		fail("setsockopt");
+
+	memset(&addr_nom, 0, sizeof(addr_nom));
+	addr_nom.sipc_family = AF_RTIPC;
+	addr_nom.sipc_port = XDDP_PORT_SIM;
+
+	if( __cobalt_setsockopt(socket_act, SOL_XDDP, XDDP_POOLSZ, &poolsz, sizeof(poolsz))==-1)
+		fail("setsockopt");
+
+	memset(&addr_act, 0, sizeof(addr_act));
+	addr_act.sipc_family = AF_RTIPC;
+	addr_act.sipc_port = XDDP_PORT_ACT;
+
+	if(__cobalt_bind(socket_nom, (struct sockaddr *)&addr_nom, sizeof(addr_nom)) == -1)
+		fail("bind");
+	if(__cobalt_bind(socket_act, (struct sockaddr *)&addr_act, sizeof(addr_act)) == -1)
+		fail("bind");
+
+    while(1) 
+    {
+        rt_task_wait_period(NULL); //wait for next cycle
+		if(system_ready)
+		{
+			Quaterniond quaternion(cs_nom_hyumm.getRMat());		
+			for(int i=0; i<MM_DOF_NUM; i++)
+			{
+				bullet_nom_msg->position[i] = info_mm.nom.q(i);
+				bullet_act_msg->position[i] = info_mm.act.q(i);
+			}
+			ret_nom = __cobalt_sendto(socket_nom, bullet_nom_msg, BUFLEN, 0, (struct sockaddr *) &addr_nom, addr_nom_len);
+			ret_act = __cobalt_sendto(socket_act, bullet_act_msg, BUFLEN, 0, (struct sockaddr *) &addr_act, addr_act_len);
+		}
+	}
+	close(socket_nom);
+	close(socket_act);
+
+	return;
 }
 
 void odom_run(void *arg) {
@@ -968,6 +967,7 @@ void odom_run(void *arg) {
 	size_t poolsz;
 	char buf[128];
 	size_t BUFLEN = sizeof(packet::Odometry);
+	Vector3d V_mob;
 	
 	struct packet::Odometry *odom_msg = (packet::Odometry *)malloc(BUFLEN);
 	
@@ -995,7 +995,9 @@ void odom_run(void *arg) {
         rt_task_wait_period(NULL); //wait for next cycle
 		if(system_ready)
 		{
-			Quaterniond quaternion(cs_nom_hyumm.getRMat());
+			Quaterniond quaternion;
+			quaternion = AngleAxisd(info_mm.nom.q(2), Eigen::Vector3d::UnitZ());
+			V_mob = E_mob*info_mm.nom.q_dot.head(3);
 
 			odom_msg->pose.position.x = info_mm.nom.q(0);
 			odom_msg->pose.position.y = info_mm.nom.q(1);
@@ -1003,9 +1005,9 @@ void odom_run(void *arg) {
 			odom_msg->pose.orientation.y = quaternion.y();
 			odom_msg->pose.orientation.z = quaternion.z();
 			odom_msg->pose.orientation.w = quaternion.w();
-			odom_msg->twist.linear.x = info_mm.nom.q_dot(0);
-			odom_msg->twist.linear.y = info_mm.nom.q_dot(1);
-			odom_msg->twist.angular.z = info_mm.nom.q_dot(2);
+			odom_msg->twist.linear.x = V_mob(0);
+			odom_msg->twist.linear.y = V_mob(1);
+			odom_msg->twist.angular.z = V_mob(2);
 			
 			ret = __cobalt_sendto(socket, odom_msg, BUFLEN, 0, (struct sockaddr *) &addr, addrlen);
 			// ret = __cobalt_sendto(socket, odom_msg, BUFLEN, 0, NULL, 0);
@@ -1029,6 +1031,7 @@ void cmd_vel_run(void *arg) {
 	size_t poolsz;
 	char buf[128];
 	size_t BUFLEN = sizeof(packet::Twist);
+	Vector3d V_mob;
 	
 	struct packet::Twist *twist_msg = (packet::Twist *)malloc(BUFLEN);
 
@@ -1060,8 +1063,9 @@ void cmd_vel_run(void *arg) {
 
 		if(ret >0)
 		{
-
-			info_mm.des.q_dot.head(3) << twist_msg->linear.x , twist_msg->linear.y, twist_msg->angular.z;
+			
+			V_mob << twist_msg->linear.x , twist_msg->linear.y, twist_msg->angular.z;
+			info_mm.des.q_dot.head(3) = Einv_mob * V_mob;
 		}
 		
 	}
@@ -1122,6 +1126,8 @@ int main(int argc, char *argv[])
 	cs_hyumm.CSSetup("../lib/URDF2CASADI/hyumm/hyumm.json", period);
 	cs_nom_hyumm=CS_hyumm();
 	cs_nom_hyumm.CSSetup("../lib/URDF2CASADI/hyumm/hyumm.json", period);
+	cs_indy7=CS_Indy7();
+	cs_indy7.CSSetup("../lib/URDF2CASADI/indy7/indy7.json", period);
 
     
     // std::thread qtThread(runQtApplication, argc, argv);
@@ -1144,9 +1150,9 @@ int main(int argc, char *argv[])
     rt_task_set_affinity(&motor_task, &cpuset_rt2);
     rt_task_start(&motor_task, &motor_run, NULL);
 
-	rt_task_create(&bullet_task, "bullet_task", 0, 99, 0);
+	rt_task_create(&bullet_task, "bullet_task", 0, 60, 0);
     // rt_task_set_affinity(&bullet_task, &cpuset_rt1);
-    // rt_task_start(&bullet_task, &bullet_run, NULL);
+    rt_task_start(&bullet_task, &bullet_run, NULL);
 
     rt_task_create(&print_task, "print_task", 0, 70, 0);
     rt_task_set_affinity(&print_task, &cpuset_rt1);

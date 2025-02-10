@@ -300,6 +300,7 @@
 #define __amd64__ 1
 #define __INT64_TYPE__ long int
 #define __FLT_MAX_EXP__ 128
+#define BT_USE_DOUBLE_PRECISION 1
 #define __ORDER_BIG_ENDIAN__ 4321
 #define __DBL_MANT_DIG__ 53
 #define __cpp_inheriting_constructors 201511

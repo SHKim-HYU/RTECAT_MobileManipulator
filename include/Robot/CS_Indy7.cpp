@@ -416,15 +416,16 @@ void CS_Indy7::setNRICgain(Arm_JVec _NRIC_Kp, Arm_JVec _NRIC_Ki, Arm_JVec _NRIC_
 
 void CS_Indy7::updateRobot(Arm_JVec _q, Arm_JVec _dq)
 {
-    M = computeM(_q);
-    Minv = computeMinv(_q);
-    C = computeC(_q, _dq);
-    G = computeG(_q); 
+    // M = computeM(_q);
+    // Minv = computeMinv(_q);
+    // C = computeC(_q, _dq);
+    // G = computeG(_q); 
 
     J_b = computeJ_b(_q);
+    manipulability = computeManipulability(_q);
     // dJ_b = computeJdot_b(_q, _dq);
 
-    T_ee = computeFK(_q);
+    // T_ee = computeFK(_q);
 
 
     isUpdated=true;   
@@ -955,6 +956,17 @@ Arm_Jacobian CS_Indy7::computeJdot_s(Arm_JVec _q, Arm_JVec _dq)
     return dJ_s;
 }
 
+double CS_Indy7::computeManipulability(Arm_JVec _q)
+{
+    computeJ_s(_q);
+
+    double tmp;
+
+    manipulability = sqrt((J_b*J_b.transpose()).determinant());
+
+    return manipulability;
+}
+
 Arm_MassMat CS_Indy7::getM()
 {
     return M;
@@ -990,6 +1002,10 @@ Arm_Jacobian CS_Indy7::getJdot_b()
 Arm_Jacobian CS_Indy7::getJdot_s()
 {
     return dJ_s;
+}
+double CS_Indy7::getManipulability()
+{
+    return manipulability;
 }
 
 Arm_JVec CS_Indy7::FrictionEstimation(Arm_JVec dq)

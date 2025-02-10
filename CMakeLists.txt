@@ -158,10 +158,45 @@ set(CTRL_SOURCE_FILES
     src/mainwindow.cpp
     src/mainwindow.ui
 )
+set(SIM_SOURCE_FILES
+    src/bullet_server.cpp
+)
+#bullet3
+set(BULLET_PHYSICS_SOURCE_DIR  "/opt/bullet3")
+include_directories(
+    ${BULLET_PHYSICS_SOURCE_DIR}/src
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator		
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/enet/include
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/clsocket/src
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/CommonInterfaces
+)
+SET(RobotSimulator_SRCS_GUI
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/b3RobotSimulatorClientAPI.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/b3RobotSimulatorClientAPI.h	
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/MinitaurSetup.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/MinitaurSetup.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/ExampleBrowser/InProcessExampleBrowser.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsServerExample.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsClientExample.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/RemoteGUIHelper.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsServerExample.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsClientExample.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/RemoteGUIHelper.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsSharedMemoryCommands.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/GraphicsSharedMemoryPublic.h
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/PhysicsServerExample.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/PhysicsServerExampleBullet2.cpp
+    ${BULLET_PHYSICS_SOURCE_DIR}/examples/SharedMemory/SharedMemoryInProcessPhysicsC_API.cpp	
+)
 
 # Add a executable with the above sources
 set(CTRL_EXECUTABLE ${PROJECT_NAME}_CTRL)
+set(SIM_EXECUTABLE ${PROJECT_NAME}_SIM)
 add_executable(${CTRL_EXECUTABLE} ${CTRL_SOURCE_FILES})
+add_executable(${SIM_EXECUTABLE} ${SIM_SOURCE_FILES} ${RobotSimulator_SRCS_GUI})
 
 target_link_libraries(${CTRL_EXECUTABLE}
         sub::ECAT
@@ -175,6 +210,10 @@ target_link_libraries(${CTRL_EXECUTABLE}
         Qt5::Gui
         Qt5::Network
         Qt5::Quick
+)
+target_link_libraries(${SIM_EXECUTABLE}
+    sub::Robot
+    pthread
 )
 
 # jsoncpp
@@ -210,6 +249,8 @@ if (BULLET_FOUND)
     target_include_directories(${CTRL_EXECUTABLE} PUBLIC ${BULLET_INCLUDE_DIRS})
     target_link_libraries(${CTRL_EXECUTABLE} ${BULLET_LIBRARIES})
 endif()
+target_compile_definitions(${SIM_EXECUTABLE} PUBLIC -DBT_USE_DOUBLE_PRECISION)
+
 
 # casadi
 add_compile_definitions(__CASADI__)

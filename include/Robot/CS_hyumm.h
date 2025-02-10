@@ -21,28 +21,18 @@ using namespace lr;
 class CS_hyumm  {
 public:
 	CS_hyumm();
-	
-	// ~CS_hyumm(){
-	// 	// Free the handle
-    // 	dlclose(fd_handle);
-    // 	dlclose(M_handle);
-    // 	dlclose(Minv_handle);
-    // 	dlclose(C_handle);
-    // 	dlclose(G_handle);
-    // 	dlclose(J_s_handle);
-    // 	dlclose(J_b_handle);
-    // 	dlclose(FK_handle);
-	// };
 
-	// JsonLoader loader_;
 
 	void CSSetup(const string& _modelPath, double _period);
 	void setPIDgain(MM_JVec _Kp, MM_JVec _Kd, MM_JVec _Ki);
 	void setHinfgain(MM_JVec _Hinf_Kp, MM_JVec _Hinf_Kd, MM_JVec _Hinf_Ki, MM_JVec _Hinf_K_gamma);
-	void setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_gamma);
-	void setTaskgain(Twist _Kp, Twist _Kv, Twist _Ki, MM_JVec _K);
+	void setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K, MM_JVec _NRIC_gamma);
+	void setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K);
+	void setTaskImpedancegain(Matrix6d _Kp, Matrix6d _Kv, Matrix6d _Kgamma);
 
 	void updateRobot(MM_JVec _q, MM_JVec _dq);
+
+	MM_JVec addLoadedTorque(MM_JVec _q, Vector3d _com, double _m);
 
 	MM_JVec computeFD(MM_JVec _q, MM_JVec _dq, MM_JVec _tau);
 	void computeRK45(MM_JVec _q, MM_JVec _dq, MM_JVec _tau, MM_JVec &_q_nom, MM_JVec &_dq_nom, MM_JVec &_ddq_nom);
@@ -65,6 +55,7 @@ public:
 	MM_Jacobian computeJdot_b(MM_JVec _q, MM_JVec _dq);
 	MM_Jacobian computeJdot_s(MM_JVec _q, MM_JVec _dq);
 
+
 	MM_MassMat getM();
 	MM_MassMat getMinv();
 	MM_MassMat getC();
@@ -84,17 +75,30 @@ public:
 
 	MM_JVec FrictionEstimation(MM_JVec dq);
 
+	// Joint Space
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
 	MM_JVec ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
-	MM_JVec TaskInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
-	MM_JVec TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
-	MM_JVec TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des);
-    void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
-    
-    MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
+	MM_JVec PassivityInverseDynamicControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
+	MM_JVec PassivityInverseDynamicControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
+	MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des);
 	MM_JVec HinfControl(MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des, MM_JVec _tau_ext);
+	
+	// Task Space
+    MM_JVec TaskInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskImpedanceControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext);
+	MM_JVec TaskPassivityImpedanceControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext);
+  	MM_JVec TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des);
+	MM_JVec TaskRedundantImpedanceControl(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext);
+    MM_JVec TaskStablePD(SE3 T_des, Twist V_des, Twist V_dot_des, MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot);
+
+	void resetTaskAdmittance();
+	void TaskAdmittance(SE3 T_des, Twist V_des, Twist V_dot_des, SE3 &T_adm, Twist &V_adm, Twist &V_dot_adm, Twist F_des, Twist F_ext);    
+
 	MM_JVec NRIC(MM_JVec q_r, MM_JVec dq_r, MM_JVec q_n, MM_JVec dq_n);
+
 	void computeAlpha(MM_JVec edot, MM_JVec tau_c);
+	void saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES);
 
 private:
 	MM_JVec q, dq, ddq;
@@ -115,6 +119,12 @@ private:
 	Twist V_b, V_s;
 	Twist V_dot;
 	Twist lambda, lambda_dot, lambda_int;
+
+	SE3 T_ref;
+	Twist V_ref, V_dot_ref;
+
+	Twist F_eff;
+	Twist gamma, gamma_int;
 
 	Matrix6d A_tool, B_tool;
 
@@ -162,9 +172,13 @@ private:
 	Matrix6d Task_Ki;
 	MM_JMat Task_K;
 
-	MM_JMat M_imp;
-    MM_JMat B_imp;
-    MM_JMat K_imp;
+	Matrix6d Task_Kp_imp;
+	Matrix6d Task_Kv_imp;
+	Matrix6d Task_Kgama_imp;
+	Matrix6d Task_K_imp;
+
+	Matrix6d A_, D_, K_;
+    Matrix6d A_lambda, D_lambda, K_lambda;
 
     MM_JMat Kp;
     MM_JMat Kv;

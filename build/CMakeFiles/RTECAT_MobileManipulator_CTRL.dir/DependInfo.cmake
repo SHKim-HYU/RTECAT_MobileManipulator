@@ -12,6 +12,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
+  "BT_USE_DOUBLE_PRECISION"
   "QT_CORE_LIB"
   "QT_GUI_LIB"
   "QT_NETWORK_LIB"
@@ -36,6 +37,14 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../include/Robot"
   "../include/QtWidgets"
   "../include/DarkStyleWindow"
+  "/opt/bullet3/src"
+  "/opt/bullet3/examples"
+  "/opt/bullet3/examples/SharedMemory"
+  "/opt/bullet3/examples/RobotSimulator"
+  "/opt/bullet3/examples/ThirdPartyLibs"
+  "/opt/bullet3/examples/ThirdPartyLibs/enet/include"
+  "/opt/bullet3/examples/ThirdPartyLibs/clsocket/src"
+  "/opt/bullet3/examples/CommonInterfaces"
   "/usr/xenomai/include/cobalt"
   "/usr/xenomai/include"
   "/usr/xenomai/include/alchemy"

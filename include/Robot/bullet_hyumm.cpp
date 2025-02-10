@@ -32,7 +32,8 @@ const char* sep ="-";
 	
 cout<<"--------------------------------------------------------------------------------"<<endl;
 }
-Bullet_Hyumm::Bullet_Hyumm(class b3RobotSimulatorClientAPI_NoDirect* sim,int robotId){
+Bullet_Hyumm::Bullet_Hyumm(class b3RobotSimulatorClientAPI* sim, int robotId){
+	this->sim = sim;
 	this->robotId = robotId;
 	int numJoints = sim->getNumJoints(this->robotId);
 	int actuated_joint_num = 0;
@@ -40,7 +41,7 @@ Bullet_Hyumm::Bullet_Hyumm(class b3RobotSimulatorClientAPI_NoDirect* sim,int rob
 	{
 		b3JointInfo jointInfo;
 		sim->getJointInfo(this->robotId, i, &jointInfo);
-		if (jointInfo.m_jointName[0] && jointInfo.m_jointType!=eFixedType)
+		if (jointInfo.m_jointType!=eFixedType)
 		{
 			this->actuated_joint_name.push_back(jointInfo.m_jointName);
 			this->actuated_joint_id.push_back(i);		
@@ -53,7 +54,6 @@ Bullet_Hyumm::Bullet_Hyumm(class b3RobotSimulatorClientAPI_NoDirect* sim,int rob
 			sim->setJointMotorControl(robotId,i,controlArgs2);
 			actuated_joint_num++;	
 		}
-		
 	}
 	this->eef_num = numJoints-1;
 	this->actuated_joint_num = actuated_joint_num;
@@ -68,7 +68,7 @@ MM_JVec saturate(MM_JVec val, MM_JVec max_val){
 	}
 	return retVal;
 }
-void Bullet_Hyumm::set_torque(class b3RobotSimulatorClientAPI_NoDirect* sim,MM_JVec  torques ,MM_JVec  max_torques){
+void Bullet_Hyumm::set_torque(MM_JVec  torques ,MM_JVec  max_torques){
 	b3RobotSimulatorJointMotorArgs controlArgs(CONTROL_MODE_TORQUE);
 	MM_JVec saturated_torques = saturate(torques,max_torques);
 	for (int i = 0; i<torques.size();i++){
@@ -76,7 +76,7 @@ void Bullet_Hyumm::set_torque(class b3RobotSimulatorClientAPI_NoDirect* sim,MM_J
 		sim->setJointMotorControl(this->robotId,this->actuated_joint_id.at(i),controlArgs);
 	}	
 }
-MM_JVec Bullet_Hyumm::get_q(class b3RobotSimulatorClientAPI_NoDirect* sim){
+MM_JVec Bullet_Hyumm::get_q(){
 	MM_JVec q(this->actuated_joint_num);
 	b3JointSensorState jointStates;
 	
@@ -92,7 +92,7 @@ MM_JVec Bullet_Hyumm::get_q(class b3RobotSimulatorClientAPI_NoDirect* sim){
 	
 	return q;
 }	
-Vector6d Bullet_Hyumm::get_FT(class b3RobotSimulatorClientAPI_NoDirect* sim){
+Vector6d Bullet_Hyumm::get_FT(){
 	Vector6d FT,retFT;
 	b3JointSensorState jointStates;
 	int numJoints = sim->getNumJoints(this->robotId);
@@ -111,7 +111,7 @@ Vector6d Bullet_Hyumm::get_FT(class b3RobotSimulatorClientAPI_NoDirect* sim){
 	retFT[5] = FT[2];
 	return retFT;
 }	
-MM_JVec Bullet_Hyumm::get_qdot(class b3RobotSimulatorClientAPI_NoDirect* sim){
+MM_JVec Bullet_Hyumm::get_qdot(){
 	MM_JVec qdot(this->actuated_joint_num);
 	b3JointSensorState jointStates;
 	int numJoints = sim->getNumJoints(this->robotId);
@@ -126,7 +126,7 @@ MM_JVec Bullet_Hyumm::get_qdot(class b3RobotSimulatorClientAPI_NoDirect* sim){
 
 	return qdot;
 }	
-SE3 Bullet_Hyumm::get_eef_pose(class b3RobotSimulatorClientAPI_NoDirect* sim){
+SE3 Bullet_Hyumm::get_eef_pose(){
 	SE3 pose = SE3::Identity(4,4);
 	b3LinkState linkState;
 	bool computeVelocity = true;
@@ -151,12 +151,12 @@ SE3 Bullet_Hyumm::get_eef_pose(class b3RobotSimulatorClientAPI_NoDirect* sim){
 	return pose;
 }
 
-void Bullet_Hyumm::reset_q(class b3RobotSimulatorClientAPI_NoDirect* sim,MM_JVec q){
+void Bullet_Hyumm::reset_q(MM_JVec q){
 	for (int i = 0; i<q.size();i++){
 		sim->resetJointState(this->robotId,this->actuated_joint_id.at(i),q[i]);
 	}
 }
-void Bullet_Hyumm::apply_ext_FT(class b3RobotSimulatorClientAPI_NoDirect* sim,MM_JVec FT){
+void Bullet_Hyumm::apply_ext_FT(MM_JVec FT){
 	btVector3 force ;
 	btVector3 torque ;
 	torque[0] = -FT(0);

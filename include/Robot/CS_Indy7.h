@@ -59,6 +59,8 @@ public:
 	Arm_Jacobian computeJdot_b(Arm_JVec _q, Arm_JVec _dq);
 	Arm_Jacobian computeJdot_s(Arm_JVec _q, Arm_JVec _dq);
 
+	double computeManipulability(Arm_JVec _q);
+
 	Arm_MassMat getM();
 	Arm_MassMat getMinv();
 	Arm_MassMat getC();
@@ -70,6 +72,8 @@ public:
 	Arm_Jacobian getJ_s();
 	Arm_Jacobian getJdot_b();
 	Arm_Jacobian getJdot_s();
+
+	double getManipulability();
 
 	Arm_JVec FrictionEstimation(Arm_JVec dq);
 
@@ -145,6 +149,8 @@ private:
 	Arm_JVec Fc;
 	Arm_JVec Fv1;
 	Arm_JVec Fv2;
+
+	double manipulability;
 
 };
 #endif // CS_INDY7_H

@@ -6,8 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/robot/robot_ws/RTECAT_MobileManipulator/build/include/EcatSystem/EcatSystem_autogen/mocs_compilation.cpp
-
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/EcatSystem/CiA402_Object_Dictionary.h
 
 /home/robot/robot_ws/RTECAT_MobileManipulator/include/EcatSystem/Ecat_Master.cpp

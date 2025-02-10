@@ -91,7 +91,7 @@
 #define BASE_l 0.41 // [m]
 #define BASE_w 0.31 // [m]
 
-#define EFFICIENCY 85.0 // Gear efficiency
+#define EFFICIENCY 90.0 // Gear efficiency
 
 // Tool Information [Tip]
 #define Ixx 0.00012118
@@ -254,6 +254,10 @@ typedef struct MM_ROBOT_INFO{
 	MM_JVec qdot_target;
 	MM_JVec qddot_target;
 	MM_JVec traj_time;
+	SE3 T_target;
+	SE3 T_init;
+	Twist V_target;
+	Twist V_init; 
 	unsigned int idx;
 
 	MM_STATE act;

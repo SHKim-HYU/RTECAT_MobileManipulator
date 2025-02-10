@@ -6,27 +6,6 @@ CS_hyumm::CS_hyumm()
     robotModel = "hyumm";
     n_dof = 9;
 
-    this->q.resize(this->n_dof);
-    this->dq.resize(this->n_dof);
-    this->ddq.resize(this->n_dof);
-    this->M.resize(this->n_dof, this->n_dof);
-    this->Minv.resize(this->n_dof, this->n_dof);
-    this->C.resize(this->n_dof, this->n_dof);
-    this->G.resize(this->n_dof);
-    this->J_b.resize(6, this->n_dof);
-    this->J_s.resize(6, this->n_dof);
-    this->dJ_b.resize(6, this->n_dof);
-    this->dJ_s.resize(6, this->n_dof);
-
-    this->Kp.resize(this->n_dof, this->n_dof);
-    this->Kv.resize(this->n_dof, this->n_dof);
-    this->Ki.resize(this->n_dof, this->n_dof);
-
-    this->Hinf_Kp.resize( this->n_dof, this->n_dof);
-    this->Hinf_Kv.resize( this->n_dof, this->n_dof);
-    this->Hinf_Ki.resize( this->n_dof, this->n_dof);
-    this->Hinf_K_gamma.resize( this->n_dof, this->n_dof);
-
     Task_Kp = Matrix6d::Zero();
     Task_Kv = Matrix6d::Zero();
     Task_Ki = Matrix6d::Zero();
@@ -152,27 +131,6 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
 	n_dof = std::stoi(loader_.getValue("n_dof").asString());
     period = _period;
 
-    this->q.resize(this->n_dof);
-    this->dq.resize(this->n_dof);
-    this->ddq.resize(this->n_dof);
-    this->M.resize(this->n_dof, this->n_dof);
-    this->Minv.resize(this->n_dof, this->n_dof);
-    this->C.resize(this->n_dof, this->n_dof);
-    this->G.resize(this->n_dof);
-    this->J_b.resize(6, this->n_dof);
-    this->J_s.resize(6, this->n_dof);
-    this->dJ_b.resize(6, this->n_dof);
-    this->dJ_s.resize(6, this->n_dof);
-
-    this->Kp.resize(this->n_dof, this->n_dof);
-    this->Kv.resize(this->n_dof, this->n_dof);
-    this->Ki.resize(this->n_dof, this->n_dof);
-
-    this->Hinf_Kp.resize( this->n_dof, this->n_dof);
-    this->Hinf_Kv.resize( this->n_dof, this->n_dof);
-    this->Hinf_Ki.resize( this->n_dof, this->n_dof);
-    this->Hinf_K_gamma.resize( this->n_dof, this->n_dof);
-
     T_M << 1,0,0,0.3,
 			0,1,0,-0.1865,
 			0,0,1,1.7255,
@@ -187,6 +145,7 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
 	Blist = Ad(TransInv(T_M)) * Slist;
 
     lambda_int = Twist::Zero();
+    gamma_int = Twist::Zero();
 
     r_floor << X_com, Y_com, Z_com;
     r_ceil = VecToso3(r_floor); 
@@ -292,24 +251,6 @@ void CS_hyumm::CSSetup(const string& _modelPath, double _period)// : loader_(_mo
     Fc << F_c;
     Fv1 << F_v1;
     Fv2 << F_v2; 
-
-    // string FD_path = loader_.getValue("forward_dynamics_path").asString();
-    // string M_path = loader_.getValue("mass_matrix_path").asString();
-    // string Minv_path = loader_.getValue("mass_inverse_matrix_path").asString();
-    // string C_path = loader_.getValue("coriolis_path").asString();
-    // string G_path = loader_.getValue("gravity_path").asString();
-    // string FK_path = loader_.getValue("forward_kinematics_path").asString();
-    // string Js_path = loader_.getValue("MM_Jacobian_space_path").asString();
-    // string Jb_path = loader_.getValue("MM_Jacobian_body_path").asString();
-
-    // fd_cs = casadi::Function::load(FD_path);
-    // M_cs = casadi::Function::load(M_path);
-    // Minv_cs = casadi::Function::load(Minv_path);
-    // C_cs = casadi::Function::load(C_path);
-    // G_cs = casadi::Function::load(G_path);
-    // J_s_cs = casadi::Function::load(FK_path);
-    // J_b_cs = casadi::Function::load(Js_path);
-    // FK_cs = casadi::Function::load(Jb_path);
 
 	// Load the shared library
     string casadi_path = "../lib/URDF2CASADI/";
@@ -446,20 +387,30 @@ void CS_hyumm::setHinfgain(MM_JVec _Hinf_Kp, MM_JVec _Hinf_Kd, MM_JVec _Hinf_Ki,
     Hinf_K_gamma = _Hinf_K_gamma.asDiagonal();
 }
 
-void CS_hyumm::setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K_gamma)
+void CS_hyumm::setNRICgain(MM_JVec _NRIC_Kp, MM_JVec _NRIC_Ki, MM_JVec _NRIC_K, MM_JVec _NRIC_gamma)
 {
-    NRIC_Kp = _NRIC_Kp.asDiagonal();
-    NRIC_Ki = _NRIC_Ki.asDiagonal();
-    NRIC_K_gamma = _NRIC_K_gamma.asDiagonal();
+    for (int i=0; i<this->n_dof; ++i)
+    {
+        NRIC_Kp(i,i) = _NRIC_Kp(i);
+        NRIC_Ki(i,i) = _NRIC_Ki(i);
+        NRIC_K_gamma(i,i) = _NRIC_K(i)+1/ _NRIC_gamma(i);
+    }
 }
 
-void CS_hyumm::setTaskgain(Twist _Kp, Twist _Kv, Twist _Ki, MM_JVec _K)
+void CS_hyumm::setTaskgain(Twist _Kp, Twist _Kv, MM_JVec _K)
 {
     Task_Kp = _Kp.asDiagonal();
     Task_Kv = _Kv.asDiagonal();
-    Task_Ki = _Ki.asDiagonal();
     Task_K = _K.asDiagonal();
 }
+
+void CS_hyumm::setTaskImpedancegain(Matrix6d _A, Matrix6d _D, Matrix6d _K)
+{
+    A_ = _A;
+    D_ = _D;
+    K_ = _K;
+}
+
 
 void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
 {
@@ -479,6 +430,28 @@ void CS_hyumm::updateRobot(MM_JVec _q, MM_JVec _dq)
     V_b = J_b*_dq;
 
     isUpdated=true;   
+}
+
+MM_JVec CS_hyumm::addLoadedTorque(MM_JVec _q, Vector3d _com, double _m)
+{
+    MM_JVec _tau;
+    J_b = computeJ_b(_q);
+
+    r_floor << _com(0), _com(1), _com(2);
+    r_ceil = VecToso3(r_floor); 
+    G_tool << 0, 0, _m*9.8, 0, 0, 0;
+
+    Matrix6d AdT = Matrix6d::Zero(); 
+    AdT.block<3,3>(0,0) = R_ee.transpose();
+    AdT.block<3,3>(3,3) = R_ee.transpose();
+    AdT.block<3,3>(3,0) = -R_ee.transpose()*r_ceil;
+    
+
+    Twist loadtool = AdT*G_tool;
+    
+    _tau = J_b.transpose()*loadtool;
+    
+    return _tau;
 }
 
 MM_JVec CS_hyumm::computeFD(MM_JVec _q, MM_JVec _dq, MM_JVec _tau)
@@ -1207,23 +1180,24 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
 {
     MM_JVec e = q_des-q;
     MM_JVec edot = dq_des-dq;
-    double m_gam = 1;
-    // double m_gam = 10;
-    double m_gam_mob = 0.02;
-    // double m_gam_mob = 0.2;
-    MM_MassMat m_mat = MM_MassMat::Zero();
-    m_mat.diagonal()<< m_gam_mob, m_gam_mob, m_gam_mob, m_gam, m_gam, m_gam, m_gam, m_gam, m_gam;
-    // m_mat.diagonal()<< m_gam_mob, m_gam_mob, m_gam_mob, 0.5, 0.5, 0.7, 0.7, 0.8, 1;
-    MM_JVec K;
-    K << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2;
+
+    // apperent inertia, spring, damper
+    MM_MassMat m_ = MM_MassMat::Zero();
+    MM_JVec k_, d_;
+
+    m_.diagonal()<< 20, 20, 20, 5, 2.5, 1.25, 0.25, 0.25, 0.25;
+    k_ << 800.0, 800.0, 800.0, 500.0, 500.0, 300.0, 200.0, 200.0, 200.0;
+    d_ << 155.0, 155.0, 155.0, 50.0, 50.0, 30.0, 20.0, 20.0, 20.0;
+    
     
     tau_ext = _tau_ext;
     eint = eint + e*period;	
     
     if(isUpdated)
     {
-        MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
-        tau = M*ddq_ref + C*dq + G + tau_ext - tau_bd;
+        MM_JVec ddq_ref = ddq_des + m_.inverse()*(d_.cwiseProduct(edot) + k_.cwiseProduct(e) + tau_ext);
+        // tau = M*ddq_ref + C*dq + G + tau_ext - tau_bd;
+        tau = M*ddq_ref + C*dq + G;// + tau_ext - tau_bd;
         isUpdated = false;
     }
     else
@@ -1231,10 +1205,37 @@ MM_JVec CS_hyumm::ComputedTorqueControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_J
         M = computeM(q);
         C = computeC(q, dq);
         G = computeG(q);
-        MM_JVec ddq_ref = ddq_des + m_mat*Kv*edot + m_mat*Kp*e + m_mat*tau_ext;
-        tau = M*ddq_ref+C*dq+G + tau_ext - tau_bd;
+        MM_JVec ddq_ref = ddq_des + m_.inverse()*(d_.cwiseProduct(edot) + k_.cwiseProduct(e) + tau_ext);
+        // tau = M*ddq_ref+C*dq+G + tau_ext - tau_bd;
+        tau = M*ddq_ref+C*dq+G;// + tau_ext - tau_bd;
     }
     // tau = K.cwiseProduct(tau);
+    return tau;   
+}
+
+MM_JVec CS_hyumm::PassivityInverseDynamicControl( MM_JVec q,MM_JVec dq,MM_JVec q_des,MM_JVec dq_des,MM_JVec ddq_des)
+{
+    MM_JVec e = q_des-q;
+    MM_JVec edot = dq_des-dq;
+    
+    eint = eint + e*period;	
+    
+    if(isUpdated)
+    {
+        MM_JVec ddq_ref = ddq_des + Kv*edot + Kp*e;
+        MM_JVec dq_ref = dq_des + Kv*e + Kp*eint;
+
+        tau = M*ddq_ref + C*dq + G;
+        isUpdated = false;
+    }
+    else
+    {
+        M = computeM(q);
+        C = computeC(q, dq);
+        G = computeG(q);
+        MM_JVec ddq_ref = ddq_des + Kv*edot + Kp*e;
+        tau = M*ddq_ref+C*dq+G;
+    }
     return tau;   
 }
 
@@ -1275,13 +1276,100 @@ MM_JVec CS_hyumm::TaskPassivityInverseDynamicsControl(MM_JVec q_dot, SE3 T_des, 
     Twist lambda_ddot_ref = Task_Kv * lambda_dot + Task_Kp * lambda;
 
     Twist V_ref = Ad(T_err) * (V_des + dexp6(-lambda) * (lambda_dot_ref));
-    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot_ref));
     
     MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
     MM_JVec q_dot_ref = invJb * V_ref;
     MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot_ref);
     MM_JVec edot = q_dot_ref - q_dot;
     MM_JVec tau_ref = Task_K * edot;
+    
+    MM_JVec torques = M * qddot_ref + C * q_dot_ref + G + tau_ref;
+
+    return torques;
+}
+
+MM_JVec CS_hyumm::TaskImpedanceControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_int += lambda * period;
+
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    F_eff = F_des - Ad(T_err).transpose()*F_ext;
+    gamma = dexp6(-lambda).transpose()*F_eff;
+    gamma_int += gamma *period;
+
+    A_lambda = dexp6(-lambda).transpose() * A_ * dexp6(-lambda);
+    D_lambda = dexp6(-lambda).transpose() * (D_ * dexp6(-lambda) + A_*ddexp6(-lambda, -lambda_dot));
+    K_lambda = dexp6(-lambda).transpose() * K_ * dexp6(-lambda);
+
+    Task_Kv_imp = dlog6(-lambda)*(A_.inverse()*D_*dexp6(-lambda) + ddexp6(-lambda, -lambda_dot));
+    Task_Kp_imp = dlog6(-lambda)*A_.inverse()*K_*dexp6(-lambda);
+    Task_Kgama_imp = dlog6(-lambda)*A_.inverse()*dlog6(-lambda).transpose();
+
+
+    Twist lambda_ddot_ref = -Task_Kv_imp * lambda_dot - Task_Kp_imp * lambda + Task_Kgama_imp * gamma;
+
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des - (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    
+    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot);
+    
+    // MM_JVec torques = M * qddot_ref + C * q_dot + G + J_b.transpose()*F_ext;
+    MM_JVec torques = M * qddot_ref + C * q_dot + G;
+    
+
+    return torques;
+}
+
+MM_JVec CS_hyumm::TaskPassivityImpedanceControl(MM_JVec q_dot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext)
+{
+    A_.diagonal() << 3, 3, 3, 0.5, 0.5, 0.5;
+    D_.diagonal() << 10, 10, 10, 1, 1, 1;
+    K_.diagonal() << 1000, 1000, 1000, 100, 100, 100;
+
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_int += lambda * period;
+
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    F_eff = F_des - Ad(T_err).transpose()*F_ext;
+    gamma = dexp6(-lambda).transpose()*F_eff;
+    gamma_int += gamma *period;
+
+    A_lambda = dexp6(-lambda).transpose() * A_ * dexp6(-lambda);
+    D_lambda = dexp6(-lambda).transpose() * (D_ * dexp6(-lambda) + A_*ddexp6(-lambda, -lambda_dot));
+    K_lambda = dexp6(-lambda).transpose() * K_ * dexp6(-lambda);
+
+    Task_Kv_imp = dlog6(-lambda)*(A_.inverse()*D_*dexp6(-lambda) + ddexp6(-lambda, -lambda_dot));
+    Task_Kp_imp = dlog6(-lambda)*A_.inverse()*K_*dexp6(-lambda);
+    Task_Kgama_imp = dlog6(-lambda)*A_.inverse()*dlog6(-lambda).transpose();
+
+
+    Twist lambda_dot_ref = -Task_Kv_imp * lambda - Task_Kp_imp * lambda_int + Task_Kgama_imp * gamma_int;
+    Twist lambda_ddot_ref = -Task_Kv_imp * lambda_dot - Task_Kp_imp * lambda + Task_Kgama_imp * gamma;
+
+    Twist V_ref = Ad(T_err) * (V_des + dexp6(-lambda) * (lambda_dot_ref));
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des + (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot_ref));
+    
+    MM_pinvJacobian invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+    MM_JVec q_dot_ref = invJb * V_ref;
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot_ref);
+
+    Twist lambda_dot_tilde_ref = lambda_dot_ref - lambda_dot;
+    Twist V_tilde_ref = -Ad(T_err)*dexp6(-lambda)*lambda_dot_tilde_ref;
+    MM_JVec tau_ref = J_b.transpose()*(Task_K_imp*V_tilde_ref - F_ext);
     
     MM_JVec torques = M * qddot_ref + C * q_dot_ref + G + tau_ref;
 
@@ -1349,6 +1437,232 @@ MM_JVec CS_hyumm::TaskRedundantIDC(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec
     MM_JVec torques = M * qddot_ref + C * q_dot + G;
 
     return torques;
+}
+
+MM_JVec CS_hyumm::TaskRedundantImpedanceControl(MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot, SE3 T_des, Twist V_des, Twist V_dot_des, Twist F_des, Twist F_ext)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    
+    Twist V_err = V_des - Ad(invT_err) * V_b;
+    
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_int += lambda * period;
+
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    F_eff = F_des - Ad(T_err).transpose()*F_ext;
+    gamma = dexp6(-lambda).transpose()*F_eff;
+    gamma_int += gamma *period;
+
+    A_lambda = dexp6(-lambda).transpose() * A_ * dexp6(-lambda);
+    D_lambda = dexp6(-lambda).transpose() * (D_ * dexp6(-lambda) + A_*ddexp6(-lambda, -lambda_dot));
+    K_lambda = dexp6(-lambda).transpose() * K_ * dexp6(-lambda);
+
+    Task_Kv_imp = dlog6(-lambda)*(A_.inverse()*D_*dexp6(-lambda) + ddexp6(-lambda, -lambda_dot));
+    Task_Kp_imp = dlog6(-lambda)*A_.inverse()*K_*dexp6(-lambda);
+    Task_Kgama_imp = dlog6(-lambda)*A_.inverse()*dlog6(-lambda).transpose();
+
+
+    Twist lambda_ddot_ref = -Task_Kv_imp * lambda_dot - Task_Kp_imp * lambda + Task_Kgama_imp * gamma;
+
+    Twist V_dot_ref = Ad(T_err) * (V_dot_des - (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    
+    MM_pinvJacobian invJb, invJw;
+    invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+
+    MM_JVec jointMatrix;
+    jointMatrix << 1,1,1,0,0,0,0,0,0;
+
+    JacobiSVD<MM_Jacobian, ColPivHouseholderQRPreconditioner> svd(J_b, ComputeFullV);
+    MM_JMat V = svd.matrixV().transpose();
+
+    Matrix<double, MOBILE_DOF_NUM, MM_DOF_NUM> Z, Z_dot, ZW;
+    Matrix<double, MM_DOF_NUM, MOBILE_DOF_NUM> invZ, invZ_dot, invZw;
+    Matrix3d Zn, invZn;
+    Vector3d Zw_dot_ref;
+    MM_JMat W, W_dot, invW;
+    MM_JMat Wdiag = MM_JMat::Zero();
+    W_dot = MM_JMat::Zero();
+
+    Z = V.block<MOBILE_DOF_NUM,MM_DOF_NUM>(6,0);
+  
+    invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    Zn = Z.block<MOBILE_DOF_NUM, MOBILE_DOF_NUM>(0,0);
+    invZn = Zn.inverse();
+
+    // Method 1 M scale
+    // Z = Minv.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * Z;
+    // invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    // W = M * jointMatrix.asDiagonal() + J_b.transpose()*J_b;
+
+    // // Method 2 ZZ
+    Wdiag.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZn;
+    W = Wdiag + J_b.transpose()*J_b;
+    
+    Z_dot = (-invJb * dJ_b * Z.transpose()).transpose();
+    invZ_dot = -invZ * Z_dot * invZ;
+    
+    invW = W.transpose() * (W*W.transpose()).inverse();
+    W_dot.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZ_dot.block<3,3>(0,0);
+    W_dot += dJ_b.transpose()*J_b + J_b.transpose()*dJ_b;
+
+    invJw = invW * J_b.transpose() * (J_b * invW * J_b.transpose()).inverse();
+    invZw = Z.transpose() * (Z * W * Z.transpose()).inverse();
+
+    // apperent inertia, spring, damper
+    Matrix3d m_ = Matrix3d::Zero();
+    Vector3d k_, d_;
+
+    m_.diagonal()<< 4, 4, 4;
+    k_ << 120.0, 120.0, 120.0;
+    d_ << 80.0, 80.0, 80.0;
+    // for(int i=0; i<3; i++)
+    //     d_(i) = 2*sqrt(k_(i)*m_(i,i));
+
+    double a0=1.0/100.0;
+    double b0=1.0;
+    double b = b0*(1-exp(-pow(J_b.block<6,6>(0,3).determinant(),2)/pow(a0,2)));
+    // printf("b: %lf\n", b);
+    
+    Zw_dot_ref = dq_ddot.head<3>() + m_.inverse()*(k_.cwiseProduct(dq.head<3>()-q.head<3>()) + d_.cwiseProduct(dq_dot.head<3>() - q_dot.head<3>()) + J_b.block<6,3>(0,0).transpose()*F_ext);
+    MM_JVec qddot_ref = invJb * (V_dot_ref - dJ_b * q_dot) + b* invZw* (Zw_dot_ref - (Z_dot*W+Z*W_dot)*q_dot);
+    MM_JVec torques = M * qddot_ref + C * q_dot + G;// + J_b.transpose()*F_ext;
+
+    return torques;
+}
+
+MM_JVec CS_hyumm::TaskStablePD(SE3 T_des, Twist V_des, Twist V_dot_des, MM_JVec q, MM_JVec q_dot, MM_JVec dq, MM_JVec dq_dot, MM_JVec dq_ddot)
+{
+    SE3 T_err = TransInv(T_ee)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    Matrix6d AdInvT = Ad(invT_err);
+
+    Twist V_err = V_des - AdInvT * V_b;
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    MM_pinvJacobian JT = J_b.transpose();
+    Matrix6d Kv_bar = Task_Kv*period*dlog6(-lambda);
+
+    double a0=1/2.50;
+    double b0=75.0;
+    double b = b0*exp(-pow(J_b.determinant(),2)/pow(a0,2));
+    Twist Ke = Task_Kp*(lambda+lambda_dot*period);
+    double fcut = 10.0;
+    MM_JVec qddot;
+
+
+    MM_pinvJacobian invJb, invJw;
+    invJb = J_b.transpose() * (J_b * J_b.transpose()).inverse();
+
+    MM_JVec jointMatrix;
+    jointMatrix << 1,1,1,0,0,0,0,0,0;
+
+    JacobiSVD<MM_Jacobian, ColPivHouseholderQRPreconditioner> svd(J_b, ComputeFullV);
+    MM_JMat V = svd.matrixV().transpose();
+
+    Matrix<double, MOBILE_DOF_NUM, MM_DOF_NUM> Z, Z_dot, ZW;
+    Matrix<double, MM_DOF_NUM, MOBILE_DOF_NUM> invZ, invZ_dot, invZw;
+    Matrix3d Zn, invZn;
+    Vector3d Zw_dot_ref;
+    MM_JMat W, W_dot, invW;
+    MM_JMat Wdiag = MM_JMat::Zero();
+    W_dot = MM_JMat::Zero();
+
+    Z = V.block<MOBILE_DOF_NUM,MM_DOF_NUM>(6,0);
+  
+    invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    Zn = Z.block<MOBILE_DOF_NUM, MOBILE_DOF_NUM>(0,0);
+    invZn = Zn.inverse();
+
+    // Method 1 M scale
+    // Z = Minv.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * invZ.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) * Z;
+    // invZ = Z.transpose() * (Z*Z.transpose()).inverse();
+    // W = M * jointMatrix.asDiagonal() + J_b.transpose()*J_b;
+
+    // // Method 2 ZZ
+    Wdiag.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZn;
+    W = Wdiag + J_b.transpose()*J_b;
+    
+    Z_dot = (-invJb * dJ_b * Z.transpose()).transpose();
+    invZ_dot = -invZ * Z_dot * invZ;
+    
+    invW = W.transpose() * (W*W.transpose()).inverse();
+    W_dot.block<MOBILE_DOF_NUM,MOBILE_DOF_NUM>(0,0) = invZ_dot.block<3,3>(0,0);
+    W_dot += dJ_b.transpose()*J_b + J_b.transpose()*dJ_b;
+
+    invJw = invW * J_b.transpose() * (J_b * invW * J_b.transpose()).inverse();
+    invZw = Z.transpose() * (Z * W * Z.transpose()).inverse();
+
+    // apperent inertia, spring, damper
+    Matrix3d m_ = Matrix3d::Zero();
+    Vector3d k_, d_;
+
+    m_.diagonal()<< 4, 4, 4;
+    k_ << 120.0, 120.0, 120.0;
+    d_ << 80.0, 80.0, 80.0;
+    // for(int i=0; i<3; i++)
+    //     d_(i) = 2*sqrt(k_(i)*m_(i,i));
+    
+    Zw_dot_ref = dq_ddot.head<3>() + m_.inverse()*(k_.cwiseProduct(dq.head<3>()-q.head<3>()) + d_.cwiseProduct(dq_dot.head<3>() - q_dot.head<3>()));
+
+    // if (Ke.norm()<fcut)
+    // {
+        qddot = (M+JT*Kv_bar*AdInvT*J_b).inverse()*(JT*(Task_Kp*(lambda+lambda_dot*period)+Task_Kv*lambda_dot
+                    +Kv_bar*(V_dot_des-AdInvT*dJ_b*dq + ad(V_err)*V_des-ddexp6(-lambda,-lambda_dot)*lambda_dot)) -b*dq -C*dq) + invZw* (Zw_dot_ref - (Z_dot*W+Z*W_dot)*q_dot);
+    // }
+    // else
+    // {
+    //     JVec err_tmp = lambda+lambda_dot*period;
+    //     qddot = (M+JT*Kv_bar*AdInvT*J_b).inverse()*(JT*(fcut*err_tmp/err_tmp.norm()+Task_Kv*lambda_dot
+    //                 +Kv_bar*(V_dot_des-AdInvT*dJ_b*dq + ad(V_err)*V_des-ddexp6(-lambda,-lambda_dot)*lambda_dot)) -b*dq -C*dq);
+    // }
+
+    return qddot;
+}
+
+
+void CS_hyumm::TaskAdmittance(SE3 T_des, Twist V_des, Twist V_dot_des, SE3 &T_adm, Twist &V_adm, Twist &V_dot_adm, Twist F_des, Twist F_ext)
+{
+    SE3 T_err = TransInv(T_ref)*T_des;
+    SE3 invT_err = TransInv(T_err);
+    Matrix6d AdInvT = Ad(invT_err);
+
+    Twist V_err = V_des - AdInvT * V_ref;
+    lambda = se3ToVec(MatrixLog6(T_err));
+    lambda_dot = dlog6(-lambda) * V_err;
+
+    F_eff = F_des - Ad(T_err).transpose()*F_ext;
+    gamma = dexp6(-lambda).transpose()*F_eff;
+    gamma_int += gamma *period;
+
+    A_lambda = dexp6(-lambda).transpose() * A_ * dexp6(-lambda);
+    D_lambda = dexp6(-lambda).transpose() * (D_ * dexp6(-lambda) + A_*ddexp6(-lambda, -lambda_dot));
+    K_lambda = dexp6(-lambda).transpose() * K_ * dexp6(-lambda);
+
+    Task_Kv_imp = dlog6(-lambda)*(A_.inverse()*D_*dexp6(-lambda) + ddexp6(-lambda, -lambda_dot));
+    Task_Kp_imp = dlog6(-lambda)*A_.inverse()*K_*dexp6(-lambda);
+    Task_Kgama_imp = dlog6(-lambda)*A_.inverse()*dlog6(-lambda).transpose();
+
+
+    Twist lambda_ddot_ref = -Task_Kv_imp * lambda_dot - Task_Kp_imp * lambda + Task_Kgama_imp * gamma;
+    V_dot_ref = Ad(T_err) * (V_dot_des - (dexp6(-lambda) * lambda_ddot_ref) + ad(V_err) * V_des - (ddexp6(-lambda, -lambda_dot) * lambda_dot));
+    V_ref += V_dot_ref*period;
+    lambda_dot = dlog6(-lambda)*V_ref*period;
+    lambda += lambda_dot;
+    T_ref = T_ref*MatrixExp6(VecTose3(lambda_dot));
+
+    V_dot_adm =  V_dot_ref;
+    V_adm = V_ref;
+    T_adm = T_ref;
+}
+
+void CS_hyumm::resetTaskAdmittance()
+{
+    V_dot_ref = Twist::Zero();
+    V_ref = V_b;
+    T_ref = T_ee;
 }
 
 void CS_hyumm::saturationMaxTorque(MM_JVec &torque, MM_JVec MAX_TORQUES)

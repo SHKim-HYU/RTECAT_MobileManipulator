@@ -45,18 +45,18 @@
 #include <PropertyDefinition.h>
 #include <liegroup_robotics.h>
 
-#include "SharedMemory/b3RobotSimulatorClientAPI_NoDirect.h"
-#include "SharedMemory/PhysicsClientSharedMemory_C_API.h"
-#include "SharedMemory/b3RobotSimulatorClientAPI_InternalData.h"
-#include "Bullet3Common/b3Vector3.h"
-#include "Bullet3Common/b3Quaternion.h"
-#include "Bullet3Common/b3HashMap.h"
+// #include "SharedMemory/b3RobotSimulatorClientAPI_NoDirect.h"
+// #include "SharedMemory/PhysicsClientSharedMemory_C_API.h"
+// #include "SharedMemory/b3RobotSimulatorClientAPI_InternalData.h"
+// #include "Bullet3Common/b3Vector3.h"
+// #include "Bullet3Common/b3Quaternion.h"
+// #include "Bullet3Common/b3HashMap.h"
 
-#include "Utils/b3Clock.h"
-#include <map>
-#include <vector>
-#include "bullet_hyumm.h"
-unsigned long periodBullet = 0;
+// #include "Utils/b3Clock.h"
+// #include <map>
+// #include <vector>
+// #include "bullet_hyumm.h"
+// unsigned long periodBullet = 0;
 
 #define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
 
@@ -66,8 +66,8 @@ double period=((double) cycle_ns)/((double) NSEC_PER_SEC);	//period in second un
 
 
 
-double ft_offset[6] = {30.1, -54.8, -45.4, -1.28, -0.233, 4.295};
-// double ft_offset[6] = {0.0,};
+// double ft_offset[6] = {27.90, -56.3, -46.7, -1.269, -0.099, 4.237};
+double ft_offset[6] = {0.0,};
 Twist F_tmp;
 
 // For RT thread management
@@ -126,19 +126,25 @@ int motion=-1;
 int modeControl = 0;
 int motioncnt = 0;
 
-// Controller Gains
-MM_JVec NRIC_Kp_mm;
-MM_JVec NRIC_Ki_mm;
-MM_JVec NRIC_K_gamma_mm;
+Vector3d x_offset;
+SO3 R_offset;
 
-MM_JVec Kp_n_mm;
-MM_JVec Kd_n_mm;
-MM_JVec Ki_n_mm;
+// Controller Gains
+MM_JVec NRIC_Kp;
+MM_JVec NRIC_Ki;
+MM_JVec NRIC_K;
+MM_JVec NRIC_gamma;
+
+MM_JVec Kp_n;
+MM_JVec Kd_n;
+MM_JVec K_n;
 
 Twist Task_Kp;
 Twist Task_Kv;
 Twist Task_Ki;
 MM_JVec Task_K;
+
+Matrix6d A_, D_, K_;
 
 // Mobile Jacobian
 Mob_pinvJacobian Jinv_mob;
@@ -146,15 +152,9 @@ Mob_Jacobian J_mob;
 
 MM_JVec des_int;
 
+Matrix3d E_mob, Einv_mob;
 
-extern const int CONTROL_RATE;
-const int CONTROL_RATE = 100;
-
-// Bullet globals
-const b3Scalar FIXED_TIMESTEP = 1.0 / ((b3Scalar)CONTROL_RATE);
-b3SharedMemoryCommandHandle command;
-int statusType, ret;
-
+double manipulability;
 
 
 #endif  // /* RTECAT_MOBILEMANIPULATOR_CLIENT_H */
